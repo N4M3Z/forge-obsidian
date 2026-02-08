@@ -1,0 +1,6 @@
+{
+  "name": "forge-obsidian",
+  "version": "0.1.0",
+  "description": "Obsidian vault conventions for AI sessions. Emits wikilink, tag, and AMBER handling rules at SessionStart.",
+  "author": { "name": "N4M3Z" }
+}

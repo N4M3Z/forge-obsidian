@@ -1,0 +1,6 @@
+# forge-obsidian configuration
+#
+# Additional Obsidian convention directories (relative to CLAUDE_PROJECT_ROOT).
+# Plugin SYSTEM/ defaults always load first.
+# Configured directories layer on top.
+convention_dirs: []
