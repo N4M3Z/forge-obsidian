@@ -1,3 +1,5 @@
 name: forge-obsidian
-version: 0.1.0
-description: Obsidian vault conventions emitted at SessionStart
+version: 0.2.0
+description: Obsidian vault conventions. USE WHEN working with Obsidian vault files.
+events:
+  - SessionStart
