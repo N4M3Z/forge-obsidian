@@ -181,7 +181,7 @@ transform_front() {
 
 # --- Main function ---
 
-# load_context MODULE_ROOT PROJECT_ROOT [SECTION_HEADER] [--index-only]
+# load_context MODULE_ROOT PROJECT_ROOT [SECTION_HEADER] [--index-only] [--body-only]
 #
 # Reads config.yaml from MODULE_ROOT, loads system then user content.
 # If metadata mapping is configured, preserves and renames specified fields.
@@ -189,14 +189,17 @@ transform_front() {
 #
 # --index-only: emit only transformed metadata (no body). For session-start
 # hooks where the body is lazy-loaded via skills or file reads.
+# --body-only:  emit only the body (no frontmatter). For SKILL.md files
+# that provide their own frontmatter and use !`command` preprocessing.
 load_context() {
   local module_root="$1"
   local project_root="$2"
   shift 2
-  local section_header="" index_only=false
+  local section_header="" index_only=false body_only=false
   while [ $# -gt 0 ]; do
     case "$1" in
       --index-only) index_only=true ;;
+      --body-only)  body_only=true ;;
       *) section_header="$1" ;;
     esac
     shift
@@ -214,14 +217,19 @@ load_context() {
   _load_entry() {
     local file="$1"
     local content
-    content=$(transform_front "$file" "$field_map")
-    if [ "$index_only" = true ]; then
-      if [ -n "$field_map" ]; then
-        # Extract only the metadata block (between --- delimiters)
-        content=$(echo "$content" | awk '/^---$/{n++; print; next} n==1{print} n>=2{exit}')
-      else
-        # No metadata mapping — nothing to index
-        content=""
+    if [ "$body_only" = true ]; then
+      # Body only: strip all frontmatter, emit content only
+      content=$(strip_front "$file")
+    else
+      content=$(transform_front "$file" "$field_map")
+      if [ "$index_only" = true ]; then
+        if [ -n "$field_map" ]; then
+          # Extract only the metadata block (between --- delimiters)
+          content=$(echo "$content" | awk '/^---$/{n++; print; next} n==1{print} n>=2{exit}')
+        else
+          # No metadata mapping — nothing to index
+          content=""
+        fi
       fi
     fi
     [ -n "$content" ] && output+="$content"$'\n'

@@ -8,6 +8,9 @@ Obsidian vault conventions for AI sessions. Emits metadata index at SessionStart
 forge-obsidian/
 ├── module.yaml              # Module metadata (name, version, events)
 ├── config.yaml              # Content paths + metadata mapping
+├── skills/
+│   └── obsidian-conventions/
+│       └── SKILL.md         # Claude Code skill (frontmatter + !`command` body)
 ├── src/
 │   └── SYSTEM.md            # System content (ALL CAPS = module-provided)
 ├── hooks/
@@ -32,7 +35,9 @@ Content delivery follows PAI's progressive disclosure model. Only Tier 1 metadat
 
 ### How It Works
 
-At SessionStart, the hook emits **metadata only** via `load_context --index-only`:
+**Claude Code** uses native skill discovery via `skills/obsidian-conventions/SKILL.md`. Claude reads the skill's `description` frontmatter at session start (~30 tokens) and invokes the skill on demand when working with vault files. The SKILL.md body uses `!`command`` preprocessing to dynamically load content through `load_context --body-only`, which pulls system content from `src/SYSTEM.md` and any user content from `config.yaml` paths — including absolute paths outside the repo.
+
+The SessionStart hook is kept for **other providers** that don't support skill discovery. It emits metadata only via `load_context --index-only`:
 
 ```
 ---
@@ -41,19 +46,13 @@ description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN wor
 ---
 ```
 
-This tells the AI what content exists and when to use it. When the AI encounters a matching situation (working with vault files), it loads the full body through its native file-reading capability.
-
 ### Content Delivery by Provider
 
-Every provider gets Tier 1 metadata at session start. Tier 2+3 body loading differs:
-
-| Provider | Session start | Body loading | Mechanism |
-|----------|--------------|--------------|-----------|
-| **Claude Code** | Metadata (hook or native skill discovery) | Skill tool invocation | Lazy (~30 tokens at start) |
-| **OpenCode** | Metadata (hook via `forge-plugin.ts`) | Read tool | Lazy (~30 tokens at start) |
+| Provider | Tier 1 (discovery) | Tier 2+3 (body) | Mechanism |
+|----------|-------------------|-----------------|-----------|
+| **Claude Code** | SKILL.md frontmatter (native) | `!`command`` preprocessing | Lazy — skill invoked on demand |
+| **OpenCode** | SessionStart hook | Read tool | Lazy (~30 tokens at start) |
 | **Cursor / Copilot** | Baked into static config | Already inline | Eager (all tokens at start) |
-
-Claude Code also supports native skill discovery — it auto-loads skill frontmatter without needing the SessionStart hook. If registered as a skill, the hook becomes redundant but harmless.
 
 ## Configuration
 
@@ -84,6 +83,19 @@ Install standalone:
 ```bash
 claude plugin install forge-obsidian
 ```
+
+## Skill Discovery
+
+Claude Code discovers the skill via `skills/obsidian-conventions/SKILL.md`. The frontmatter follows the [Agent Skills](https://agentskills.io) standard:
+
+```yaml
+---
+name: obsidian-conventions
+description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
+---
+```
+
+The body uses `!`command`` preprocessing to dynamically call `load_context --body-only`, which loads `src/SYSTEM.md` body and any user content paths from `config.yaml`. No build script needed — content is resolved at invocation time, with full filesystem access (user paths can be absolute).
 
 ## System Content
 
