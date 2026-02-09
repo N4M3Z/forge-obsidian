@@ -1,5 +1,5 @@
 ---
-name: obsidian-conventions
+name: ObsidianConventions
 description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
 ---
 

@@ -9,7 +9,7 @@ forge-obsidian/
 ├── module.yaml              # Module metadata (name, version, events)
 ├── config.yaml              # Content paths + metadata mapping
 ├── skills/
-│   └── obsidian-conventions/
+│   └── ObsidianConventions/
 │       └── SKILL.md         # Claude Code skill (frontmatter + !`command` body)
 ├── src/
 │   └── SYSTEM.md            # System content (ALL CAPS = module-provided)
@@ -35,7 +35,7 @@ Content delivery follows PAI's progressive disclosure model. Only Tier 1 metadat
 
 ### How It Works
 
-**Claude Code** uses native skill discovery via `skills/obsidian-conventions/SKILL.md`. Claude reads the skill's `description` frontmatter at session start (~30 tokens) and invokes the skill on demand when working with vault files. The SKILL.md body uses `!`command`` preprocessing to dynamically load content through `load_context --body-only`, which pulls system content from `src/SYSTEM.md` and any user content from `config.yaml` paths — including absolute paths outside the repo.
+**Claude Code** uses native skill discovery via `skills/ObsidianConventions/SKILL.md`. Claude reads the skill's `description` frontmatter at session start (~30 tokens) and invokes the skill on demand when working with vault files. The SKILL.md body uses `!`command`` preprocessing to dynamically load content through `load_context --body-only`, which pulls system content from `src/SYSTEM.md` and any user content from `config.yaml` paths — including absolute paths outside the repo.
 
 The SessionStart hook is kept for **other providers** that don't support skill discovery. It emits metadata only via `load_context --index-only`:
 
@@ -86,11 +86,11 @@ claude plugin install forge-obsidian
 
 ## Skill Discovery
 
-Claude Code discovers the skill via `skills/obsidian-conventions/SKILL.md`. The frontmatter follows the [Agent Skills](https://agentskills.io) standard:
+Claude Code discovers the skill via `skills/ObsidianConventions/SKILL.md`. The frontmatter follows the [Agent Skills](https://agentskills.io) standard:
 
 ```yaml
 ---
-name: obsidian-conventions
+name: ObsidianConventions
 description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
 ---
 ```
