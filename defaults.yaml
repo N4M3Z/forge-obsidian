@@ -1,0 +1,11 @@
+# defaults.yaml — module defaults (checked into git).
+# To override, create config.yaml (gitignored) with your user paths.
+
+system:                           # Used by SessionStart hook for metadata extraction
+  - skills/ObsidianConventions/SKILL.md
+
+user: []                          # User extensions loaded by SKILL.md !`command`
+
+metadata:
+  name: [name, title]
+  description: description

@@ -1,82 +1,76 @@
 # forge-obsidian
 
-Obsidian vault conventions for AI sessions. Emits metadata index at SessionStart; body is lazy-loaded by the provider on demand.
+Obsidian vault conventions for AI sessions. SKILL.md is the single source of truth — system content inline, user extensions via `!`command`` Dynamic Context Injection.
 
 ## Layout
 
 ```
 forge-obsidian/
 ├── module.yaml              # Module metadata (name, version, events)
-├── config.yaml              # Content paths + metadata mapping
+├── defaults.yaml            # Default config (checked into git)
 ├── skills/
 │   └── ObsidianConventions/
-│       └── SKILL.md         # Claude Code skill (frontmatter + !`command` body)
-├── src/
-│   └── SYSTEM.md            # System content (ALL CAPS = module-provided)
+│       └── SKILL.md         # Source of truth: inline content + !`command` for user extensions
 ├── hooks/
 │   ├── hooks.json           # Claude Code hook registration (standalone mode)
-│   └── session-start.sh     # Hook script — emits metadata index
+│   └── session-start.sh     # Hook script — emits metadata index (optional for Claude Code)
 ├── lib/
-│   └── load.sh              # Context loader (standalone fallback)
+│   └── load.sh              # Context loader (standalone fallback, synced from Core)
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin discovery (standalone mode)
 └── README.md
 ```
 
-## Three-Tier Loading
+## How It Works
 
-Content delivery follows PAI's progressive disclosure model. Only Tier 1 metadata is emitted at session start — the body loads on demand when the provider needs it.
+**Claude Code** discovers `skills/ObsidianConventions/SKILL.md` via native skill discovery. At session start, Claude reads the skill's frontmatter (~30 tokens). When working with vault files, Claude invokes the skill — the body contains inline conventions and a `!`command`` block that loads user extensions from config.
 
-| Tier | What | When | Tokens |
-|------|------|------|--------|
-| **1 — Metadata** | `name`, `description` (USE WHEN triggers) | Session start | ~30 |
-| **2 — System content** | `src/SYSTEM.md` body | On demand (skill or file read) | ~100 |
-| **3 — User content** | Vault paths from `user:` config | On demand (skill or file read) | varies |
+**Other providers** use the SessionStart hook, which emits metadata only via `load_context --index-only`. On demand, `load_context` renders the full SKILL.md content including `!`command`` execution.
 
-### How It Works
+The SessionStart hook is **optional for Claude Code** — remove `SessionStart` from `module.yaml → events:` to disable it.
 
-**Claude Code** uses native skill discovery via `skills/ObsidianConventions/SKILL.md`. Claude reads the skill's `description` frontmatter at session start (~30 tokens) and invokes the skill on demand when working with vault files. The SKILL.md body uses `!`command`` preprocessing to dynamically load content through `load_context --body-only`, which pulls system content from `src/SYSTEM.md` and any user content from `config.yaml` paths — including absolute paths outside the repo.
+### Content Delivery
 
-The SessionStart hook is kept for **other providers** that don't support skill discovery. It emits metadata only via `load_context --index-only`:
-
-```
----
-name: Obsidian Conventions
-description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
----
-```
-
-### Content Delivery by Provider
-
-| Provider | Tier 1 (discovery) | Tier 2+3 (body) | Mechanism |
-|----------|-------------------|-----------------|-----------|
+| Provider | Discovery | Body loading | Mechanism |
+|----------|-----------|-------------|-----------|
 | **Claude Code** | SKILL.md frontmatter (native) | `!`command`` preprocessing | Lazy — skill invoked on demand |
-| **OpenCode** | SessionStart hook | Read tool | Lazy (~30 tokens at start) |
+| **OpenCode** | SessionStart hook (metadata) | `load_context` with `!`command`` | Lazy (~30 tokens at start) |
 | **Cursor / Copilot** | Baked into static config | Already inline | Eager (all tokens at start) |
 
 ## Configuration
 
+Config follows `.env.example` / `.env` pattern:
+
+- **`defaults.yaml`** — checked into git, ships with module
+- **`config.yaml`** — gitignored, user creates to override (typically adding `user:` paths)
+
+Loader reads `config.yaml` if it exists, else falls back to `defaults.yaml`.
+
 ```yaml
-# config.yaml
-system:                         # Loaded first
-  - src/SYSTEM.md
+# defaults.yaml
+system:                           # Used by SessionStart hook for metadata extraction
+  - skills/ObsidianConventions/SKILL.md
 
-user: []                        # Loaded after system (override with vault paths)
+user: []                          # User extensions loaded by SKILL.md !`command`
 
-# Metadata mapping (Airbyte/dbt convention): output field = key, source = value.
-# Fields not listed are stripped. Omit section to strip all.
-# Multi-value sources use first-match fallback: name: [name, title]
 metadata:
-  name: title
+  name: [name, title]
   description: description
 ```
 
-Entries can be files or directories (all `*.md` files loaded). Paths resolve module-local first, then fall back to the project root.
+To add custom vault conventions, create `config.yaml`:
+
+```yaml
+user:
+  - /path/to/vault/Conventions/   # directory — all *.md files loaded
+```
+
+Entries can be files or directories. Paths resolve module-local first, then project root, then absolute.
 
 ## Dual-Mode Operation
 
-- **forge-core mode**: `FORGE_LIB` is set — sources shared `Core/load.sh`
-- **Standalone mode**: No `FORGE_LIB` — sources local `lib/load.sh` (self-contained with embedded parser and frontmatter stripper)
+- **forge-core mode**: `FORGE_LIB` is set — sources shared `Core/lib/load.sh`
+- **Standalone mode**: No `FORGE_LIB` — sources local `lib/load.sh` (identical copy, synced from Core)
 
 Install standalone:
 
@@ -84,22 +78,10 @@ Install standalone:
 claude plugin install forge-obsidian
 ```
 
-## Skill Discovery
+## Skill Content
 
-Claude Code discovers the skill via `skills/ObsidianConventions/SKILL.md`. The frontmatter follows the [Agent Skills](https://agentskills.io) standard:
-
-```yaml
----
-name: ObsidianConventions
-description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
----
-```
-
-The body uses `!`command`` preprocessing to dynamically call `load_context --body-only`, which loads `src/SYSTEM.md` body and any user content paths from `config.yaml`. No build script needed — content is resolved at invocation time, with full filesystem access (user paths can be absolute).
-
-## System Content
-
-`src/SYSTEM.md` covers:
+`skills/ObsidianConventions/SKILL.md` contains:
 - Wikilink usage conventions
 - Tag vs keyword conventions
 - Path verification rules
+- `!`command`` block that loads user content from config

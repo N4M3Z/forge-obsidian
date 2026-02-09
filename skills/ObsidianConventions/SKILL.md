@@ -3,6 +3,11 @@ name: ObsidianConventions
 description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
 ---
 
-Apply these conventions when working with Obsidian vault files:
+## Obsidian Conventions
 
-!`bash -c 'MODULE_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"; PROJECT_ROOT="${CLAUDE_PROJECT_ROOT:-$(pwd)}"; source "$MODULE_ROOT/lib/load.sh"; load_context "$MODULE_ROOT" "$PROJECT_ROOT" --body-only'`
+- Use [[wikilinks]] liberally — people, projects, organizations, topics, locations. Anything that could be a note.
+- Do NOT use tags for topics or categories — use keywords with [[wikilinks]] instead.
+- Tags are reserved for system, structural and inline use only.
+- Always verify file paths exist before claiming something is inaccessible.
+
+!`bash -c 'M="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"; P="${CLAUDE_PROJECT_ROOT:-$(pwd)}"; source "$M/lib/load.sh"; load_user_content "$M" "$P"'`

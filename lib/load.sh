@@ -2,8 +2,9 @@
 # Forge Core — content loader.
 # Source this file to get the load_context() function.
 #
-# Reads a module's config.yaml, resolves system + user content paths,
-# transforms frontmatter per metadata mapping, and outputs combined content.
+# Reads a module's config (config.yaml → defaults.yaml fallback),
+# resolves system + user content paths, transforms frontmatter per
+# metadata mapping, processes !`command` blocks, and outputs content.
 #
 # Ships with every forge module as lib/load.sh (standalone fallback).
 # When FORGE_LIB is set, the Core version wins. Eventually rewritten in Rust.
@@ -12,6 +13,8 @@
 #   source load.sh
 #   load_context "$MODULE_ROOT" "$PROJECT_ROOT"
 #   load_context "$MODULE_ROOT" "$PROJECT_ROOT" "Section Header"
+#   load_context "$MODULE_ROOT" "$PROJECT_ROOT" --index-only
+#   load_user_content "$MODULE_ROOT" "$PROJECT_ROOT"
 
 # --- Dependencies: parser.sh and strip-front.sh ---
 # Source from FORGE_LIB if available, otherwise use embedded versions.
@@ -114,6 +117,21 @@ elif ! type strip_front &>/dev/null; then
   }
 fi
 
+# --- Config resolution ---
+
+# _resolve_config MODULE_ROOT
+# Returns config.yaml if it exists, else defaults.yaml.
+# Follows .env.example/.env pattern: defaults.yaml is checked into git,
+# config.yaml is gitignored and created by the user to override.
+_resolve_config() {
+  local module_root="$1"
+  if [ -f "$module_root/config.yaml" ]; then
+    echo "$module_root/config.yaml"
+  elif [ -f "$module_root/defaults.yaml" ]; then
+    echo "$module_root/defaults.yaml"
+  fi
+}
+
 # --- Metadata transformation ---
 
 # transform_front FILE FIELD_MAP
@@ -181,30 +199,29 @@ transform_front() {
 
 # --- Main function ---
 
-# load_context MODULE_ROOT PROJECT_ROOT [SECTION_HEADER] [--index-only] [--body-only]
+# load_context MODULE_ROOT PROJECT_ROOT [SECTION_HEADER] [--index-only]
 #
-# Reads config.yaml from MODULE_ROOT, loads system then user content.
-# If metadata mapping is configured, preserves and renames specified fields.
-# Otherwise strips all frontmatter (backward compatible).
+# Reads config from MODULE_ROOT (config.yaml → defaults.yaml fallback).
+# Loads system then user content paths. Transforms frontmatter per metadata
+# mapping. Processes !`command` blocks (Dynamic Context Injection) in body.
 #
 # --index-only: emit only transformed metadata (no body). For session-start
 # hooks where the body is lazy-loaded via skills or file reads.
-# --body-only:  emit only the body (no frontmatter). For SKILL.md files
-# that provide their own frontmatter and use !`command` preprocessing.
 load_context() {
   local module_root="$1"
   local project_root="$2"
   shift 2
-  local section_header="" index_only=false body_only=false
+  local section_header="" index_only=false
   while [ $# -gt 0 ]; do
     case "$1" in
       --index-only) index_only=true ;;
-      --body-only)  body_only=true ;;
       *) section_header="$1" ;;
     esac
     shift
   done
-  local config="$module_root/config.yaml"
+  local config
+  config=$(_resolve_config "$module_root")
+  [ -z "$config" ] && return 0
   local output=""
 
   # Read metadata field mapping from config (if configured)
@@ -217,20 +234,31 @@ load_context() {
   _load_entry() {
     local file="$1"
     local content
-    if [ "$body_only" = true ]; then
-      # Body only: strip all frontmatter, emit content only
-      content=$(strip_front "$file")
-    else
-      content=$(transform_front "$file" "$field_map")
-      if [ "$index_only" = true ]; then
-        if [ -n "$field_map" ]; then
-          # Extract only the metadata block (between --- delimiters)
-          content=$(echo "$content" | awk '/^---$/{n++; print; next} n==1{print} n>=2{exit}')
-        else
-          # No metadata mapping — nothing to index
-          content=""
-        fi
+    content=$(transform_front "$file" "$field_map")
+    if [ "$index_only" = true ]; then
+      if [ -n "$field_map" ]; then
+        # Extract only the metadata block (between --- delimiters)
+        content=$(echo "$content" | awk '/^---$/{n++; print; next} n==1{print} n>=2{exit}')
+      else
+        # No metadata mapping — nothing to index
+        content=""
       fi
+    fi
+    # Process !`command` blocks (Dynamic Context Injection for non-Claude providers)
+    if [ "$index_only" = false ] && [[ "$content" == *'!`'* ]]; then
+      local rendered=""
+      while IFS= read -r cline; do
+        if [[ "$cline" =~ ^\!\`.+\`$ ]]; then
+          local cmd="${cline#!\`}"
+          cmd="${cmd%\`}"
+          local cmd_out
+          cmd_out=$(eval "$cmd" 2>/dev/null) || true
+          [ -n "$cmd_out" ] && rendered+="$cmd_out"$'\n'
+        else
+          rendered+="$cline"$'\n'
+        fi
+      done <<< "$content"
+      content="$rendered"
     fi
     [ -n "$content" ] && output+="$content"$'\n'
   }
@@ -271,4 +299,47 @@ load_context() {
       printf '%s' "$output"
     fi
   fi
+}
+
+# --- User content loader ---
+
+# load_user_content MODULE_ROOT PROJECT_ROOT
+#
+# Loads only user content paths from config (config.yaml → defaults.yaml).
+# Strips frontmatter, emits body only. Called by SKILL.md !`command`
+# preprocessing to inject user extensions at skill invocation time.
+load_user_content() {
+  local module_root="$1" project_root="$2"
+  local config
+  config=$(_resolve_config "$module_root")
+  [ -z "$config" ] && return 0
+  local output=""
+
+  _uc_emit_file() {
+    local content
+    content=$(strip_front "$1")
+    [ -n "$content" ] && output+="$content"$'\n'
+  }
+
+  _uc_emit_path() {
+    local entry="$1"
+    [ -z "$entry" ] && return
+    local resolved
+    resolved=$(resolve_path "$entry" "$module_root" "$project_root")
+    [ -z "$resolved" ] && return
+    if [ -f "$resolved" ]; then
+      _uc_emit_file "$resolved"
+    elif [ -d "$resolved" ]; then
+      for f in "$resolved"/*.md; do
+        [ -f "$f" ] || continue
+        _uc_emit_file "$f"
+      done
+    fi
+  }
+
+  while IFS= read -r entry; do
+    [ -n "$entry" ] && _uc_emit_path "$entry"
+  done < <(parse_yaml_list "$config" "user")
+
+  [ -n "$output" ] && printf '%s' "$output"
 }
