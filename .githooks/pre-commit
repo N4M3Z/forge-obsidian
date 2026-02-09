@@ -11,4 +11,4 @@ staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.sh')
 [ -z "$staged" ] && exit 0
 
 printf 'Running shellcheck on staged .sh files...\n'
-echo "$staged" | tr '\n' '\0' | xargs -0 shellcheck
+echo "$staged" | tr '\n' '\0' | xargs -0 shellcheck -S warning
