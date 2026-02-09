@@ -1,6 +1,8 @@
 {
   "name": "forge-obsidian",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Obsidian vault conventions. USE WHEN working with Obsidian vault files.",
-  "author": { "name": "N4M3Z" }
+  "author": { "name": "N4M3Z" },
+  "hooks": "./hooks/hooks.json",
+  "skills": ["./skills"]
 }

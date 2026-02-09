@@ -8,12 +8,14 @@ Obsidian vault conventions for AI sessions. SKILL.md is the single source of tru
 forge-obsidian/
 ├── module.yaml              # Module metadata (name, version, events)
 ├── defaults.yaml            # Default config (checked into git)
+├── bin/
+│   └── load-user-content.sh # User content loader (called by SKILL.md !`command`)
 ├── skills/
 │   └── ObsidianConventions/
 │       └── SKILL.md         # Source of truth: inline content + !`command` for user extensions
 ├── hooks/
 │   ├── hooks.json           # Claude Code hook registration (standalone mode)
-│   └── session-start.sh     # Hook script — emits metadata index (optional for Claude Code)
+│   └── session-start.sh     # Hook script — emits metadata index
 ├── lib/
 │   └── load.sh              # Context loader (standalone fallback, synced from Core)
 ├── .claude-plugin/
@@ -21,13 +23,32 @@ forge-obsidian/
 └── README.md
 ```
 
+## Quick Start
+
+```bash
+# As a Claude Code plugin (standalone)
+claude plugin install forge-obsidian
+
+# Or as part of forge-core (submodule, already included)
+git clone forge-obsidian
+```
+
+Once active, invoke the skill when working with vault files. Claude Code discovers it automatically. To add your own conventions, create `config.yaml`:
+
+```yaml
+user:
+  - /path/to/your/ObsidianConventions/
+```
+
+All `*.md` files in that directory are loaded as user extensions when the skill runs.
+
 ## How It Works
 
 **Claude Code** discovers `skills/ObsidianConventions/SKILL.md` via native skill discovery. At session start, Claude reads the skill's frontmatter (~30 tokens). When working with vault files, Claude invokes the skill — the body contains inline conventions and a `!`command`` block that loads user extensions from config.
 
 **Other providers** use the SessionStart hook, which emits metadata only via `load_context --index-only`. On demand, `load_context` renders the full SKILL.md content including `!`command`` execution.
 
-The SessionStart hook is **optional for Claude Code** — remove `SessionStart` from `module.yaml → events:` to disable it.
+The SessionStart hook is enabled by default. To disable it (e.g. for Claude Code where skill discovery makes it redundant), set `events: []` in `config.yaml`.
 
 ### Content Delivery
 
@@ -67,21 +88,14 @@ user:
 
 Entries can be files or directories. Paths resolve module-local first, then project root, then absolute.
 
-## Dual-Mode Operation
+## Loading Modes
 
-- **forge-core mode**: `FORGE_LIB` is set — sources shared `Core/lib/load.sh`
-- **Standalone mode**: No `FORGE_LIB` — sources local `lib/load.sh` (identical copy, synced from Core)
+This module works in multiple configurations depending on your setup:
 
-Install standalone:
+| Mode | How it loads | When |
+|------|-------------|------|
+| **forge-core** | Dispatcher sets `FORGE_LIB` — shared `Core/lib/load.sh` | Part of full framework |
+| **Claude Code plugin** | `CLAUDE_PLUGIN_ROOT` — local `lib/load.sh` | `claude plugin install` |
+| **Other providers** | SessionStart hook via `load_context` | OpenCode, Cursor, etc. |
 
-```bash
-claude plugin install forge-obsidian
-```
-
-## Skill Content
-
-`skills/ObsidianConventions/SKILL.md` contains:
-- Wikilink usage conventions
-- Tag vs keyword conventions
-- Path verification rules
-- `!`command`` block that loads user content from config
+The local `lib/load.sh` is an identical copy of the Core version, synced for standalone operation.
