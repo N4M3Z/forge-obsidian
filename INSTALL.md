@@ -1,5 +1,7 @@
 # forge-obsidian — Installation
 
+> **For AI agents**: This guide covers installation of forge-obsidian. Follow the steps for your deployment mode.
+
 ## As part of forge-core
 
 Already included as a submodule. No additional setup needed.

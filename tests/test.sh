@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # forge-obsidian module tests.
-# Run: bash Modules/forge-obsidian/test.sh
+# Run: bash Modules/forge-obsidian/tests/test.sh
 set -uo pipefail
 
-MODULE_ROOT="$(builtin cd "$(dirname "$0")" && pwd)"
+MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
 PROJECT_ROOT="$(builtin cd "$MODULE_ROOT/../.." && pwd)"
 PASS=0 FAIL=0
 
@@ -15,6 +15,7 @@ setup() {
   _tmpdirs+=("$_tmpdir")
 }
 cleanup_all() {
+  command rm -f "$MODULE_ROOT/config.yaml"
   for d in "${_tmpdirs[@]}"; do
     [ -d "$d" ] && command rm -rf "$d"
   done
@@ -112,6 +113,11 @@ assert_contains "module.yaml has metadata" "metadata:" "$mod_yaml"
   && { printf '  PASS  session-start.sh exists\n'; PASS=$((PASS + 1)); } \
   || { printf '  FAIL  session-start.sh missing\n'; FAIL=$((FAIL + 1)); }
 
+# skill-load.sh exists and is executable
+[ -x "$MODULE_ROOT/hooks/skill-load.sh" ] \
+  && { printf '  PASS  skill-load.sh exists and is executable\n'; PASS=$((PASS + 1)); } \
+  || { printf '  FAIL  skill-load.sh missing or not executable\n'; FAIL=$((FAIL + 1)); }
+
 # No defaults.yaml (deleted)
 [ ! -f "$MODULE_ROOT/defaults.yaml" ] \
   && { printf '  PASS  defaults.yaml deleted\n'; PASS=$((PASS + 1)); } \
@@ -135,7 +141,7 @@ printf '\n--- session-start.sh ---\n'
 # With forge-load available (convention mode)
 FORGE_LOAD="$PROJECT_ROOT/Modules/forge-load/src"
 if [ -f "$FORGE_LOAD/load.sh" ]; then
-  result=$(FORGE_MODULE_ROOT="$MODULE_ROOT" CLAUDE_PROJECT_ROOT="$PROJECT_ROOT" bash "$MODULE_ROOT/hooks/session-start.sh" 2>/dev/null) || true
+  result=$(FORGE_ROOT="$PROJECT_ROOT" bash "$MODULE_ROOT/hooks/session-start.sh" 2>/dev/null) || true
   assert_contains "session-start (forge-load): emits name" "name: ObsidianConventions" "$result"
   assert_contains "session-start (forge-load): emits description" "description:" "$result"
   # --index-only should NOT emit body
@@ -143,7 +149,7 @@ if [ -f "$FORGE_LOAD/load.sh" ]; then
 
   # Test awk fallback: hide forge-load temporarily
   setup
-  result=$(FORGE_ROOT="$_tmpdir" FORGE_MODULE_ROOT="$MODULE_ROOT" CLAUDE_PROJECT_ROOT="$PROJECT_ROOT" bash "$MODULE_ROOT/hooks/session-start.sh" 2>/dev/null) || true
+  result=$(FORGE_ROOT="$_tmpdir" bash "$MODULE_ROOT/hooks/session-start.sh" 2>/dev/null) || true
   assert_contains "session-start (awk fallback): has name:" "name:" "$result"
 else
   printf '  SKIP  forge-load not available\n'
@@ -151,7 +157,7 @@ fi
 
 # Both paths exit 0
 exit_code=0
-FORGE_MODULE_ROOT="$MODULE_ROOT" CLAUDE_PROJECT_ROOT="$PROJECT_ROOT" bash "$MODULE_ROOT/hooks/session-start.sh" >/dev/null 2>&1 || exit_code=$?
+bash "$MODULE_ROOT/hooks/session-start.sh" >/dev/null 2>&1 || exit_code=$?
 assert_eq "session-start.sh exits 0" "0" "$exit_code"
 
 # ============================================================
@@ -223,6 +229,25 @@ if [ -f "$PROJECT_ROOT/Core/bin/dispatch.sh" ]; then
 else
   printf '  SKIP  dispatch.sh not available\n'
 fi
+
+# ============================================================
+# DCI expansion tests
+# ============================================================
+printf '\n--- DCI expansion ---\n'
+
+# DCI line 1: standalone path (module root = plugin root)
+exit_code=0
+"$MODULE_ROOT/hooks/skill-load.sh" >/dev/null 2>&1 || exit_code=$?
+assert_eq "DCI standalone: skill-load.sh exits 0" "0" "$exit_code"
+
+# DCI line 2: forge-core path (project root + Modules/...)
+exit_code=0
+"$PROJECT_ROOT/Modules/forge-obsidian/hooks/skill-load.sh" >/dev/null 2>&1 || exit_code=$?
+assert_eq "DCI forge-core: skill-load.sh exits 0" "0" "$exit_code"
+
+# skill-load.sh with no User.md produces no user content
+result=$("$MODULE_ROOT/hooks/skill-load.sh" 2>/dev/null) || true
+assert_not_contains "skill-load.sh: no User.md → no user content" "My Overrides" "$result"
 
 # ============================================================
 # Summary

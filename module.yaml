@@ -1,8 +1,12 @@
 name: forge-obsidian
-version: 0.4.0
+version: 0.5.0
 description: Obsidian vault conventions. USE WHEN working with Obsidian vault files.
 events:
   - SessionStart
 metadata:
   name: [name, title]
   description: description
+
+# External vault steering paths — override in config.yaml (gitignored).
+steering: []
+  # - /path/to/vault/Orchestration/Steering/

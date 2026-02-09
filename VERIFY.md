@@ -1,9 +1,11 @@
 # forge-obsidian — Verification
 
+> **For AI agents**: Complete this checklist after installation. Every check must pass before declaring the module installed.
+
 ## Quick check
 
 ```bash
-bash Modules/forge-obsidian/test.sh
+bash Modules/forge-obsidian/tests/test.sh
 ```
 
 ## Manual checks
@@ -29,5 +31,5 @@ Modules/forge-steering/bin/steer Modules/forge-obsidian
 
 ## Expected test results
 
-- ~20 tests covering structure, session-start.sh, steer integration, User.md, config override
+- Tests covering structure, session-start.sh, steer integration, User.md, DCI expansion, config override
 - All tests PASS

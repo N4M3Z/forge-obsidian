@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Pre-commit hook: run shellcheck on staged .sh files (if available).
+set -euo pipefail
+
+if ! command -v shellcheck &>/dev/null; then
+  printf 'note: shellcheck not found, skipping lint\n'
+  exit 0
+fi
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.sh')
+[ -z "$staged" ] && exit 0
+
+printf 'Running shellcheck on staged .sh files...\n'
+echo "$staged" | tr '\n' '\0' | xargs -0 shellcheck
