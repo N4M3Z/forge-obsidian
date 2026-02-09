@@ -1,21 +1,15 @@
 #!/usr/bin/env bash
-# SessionStart hook: emit metadata index for Obsidian conventions.
-# Emits Tier 1 metadata only (name, description). Body is lazy-loaded
-# by the provider (Skill tool on Claude Code, Read tool on others).
-#
-# Dual-mode: works standalone (CLAUDE_PLUGIN_ROOT) or as forge-core module (FORGE_MODULE_ROOT).
+# SessionStart hook: emit skill metadata for non-Claude-Code providers.
+# Uses forge-load for lazy loading if available, awk fallback otherwise.
 set -euo pipefail
 
 MODULE_ROOT="${FORGE_MODULE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$(dirname "$0")/.." && pwd)}}"
 PROJECT_ROOT="${CLAUDE_PROJECT_ROOT:-$(builtin cd "$MODULE_ROOT/../.." && pwd)}"
 
-# Context loader: forge-core shared lib → local standalone fallback
-if [ -n "${FORGE_LIB:-}" ] && [ -f "$FORGE_LIB/load.sh" ]; then
-  source "$FORGE_LIB/load.sh"
-elif [ -f "$MODULE_ROOT/lib/load.sh" ]; then
-  source "$MODULE_ROOT/lib/load.sh"
+FORGE_LOAD="${FORGE_ROOT:-$PROJECT_ROOT}/Modules/forge-load/src"
+if [ -f "$FORGE_LOAD/load.sh" ]; then
+  source "$FORGE_LOAD/load.sh"
+  load_context "$MODULE_ROOT" "$PROJECT_ROOT" --index-only
 else
-  echo "Error: load.sh not found" >&2; exit 1
+  awk '/^---$/{if(n++)exit;next} n{print}' "$MODULE_ROOT/skills/ObsidianConventions/SKILL.md"
 fi
-
-load_context "$MODULE_ROOT" "$PROJECT_ROOT" --index-only

@@ -6,20 +6,19 @@ Obsidian vault conventions for AI sessions. SKILL.md is the single source of tru
 
 ```
 forge-obsidian/
-├── module.yaml              # Module metadata (name, version, events)
-├── defaults.yaml            # Default config (checked into git)
-├── bin/
-│   └── load-user-content.sh # User content loader (called by SKILL.md !`command`)
+├── module.yaml              # Module metadata (name, version, events, metadata map)
 ├── skills/
 │   └── ObsidianConventions/
-│       └── SKILL.md         # Source of truth: inline content + !`command` for user extensions
+│       └── SKILL.md         # Source of truth: inline conventions + 2 !commands
 ├── hooks/
 │   ├── hooks.json           # Claude Code hook registration (standalone mode)
-│   └── session-start.sh     # Hook script — emits metadata index
-├── lib/
-│   └── load.sh              # Context loader (standalone fallback, synced from Core)
+│   └── session-start.sh     # Hook script — forge-load or awk fallback
+├── test.sh                  # Module tests
+├── INSTALL.md               # Installation guide
+├── VERIFY.md                # Verification guide
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin discovery (standalone mode)
+├── .gitignore
 └── README.md
 ```
 
@@ -33,69 +32,85 @@ claude plugin install forge-obsidian
 git clone forge-obsidian
 ```
 
-Once active, invoke the skill when working with vault files. Claude Code discovers it automatically. To add your own conventions, create `config.yaml`:
+Once active, invoke the skill when working with vault files. Claude Code discovers it automatically.
+
+## User Extensions
+
+Two mechanisms (additive — both can be active):
+
+### 1. External vault steering (via forge-steering)
+
+Create `config.yaml` (gitignored) with paths to external convention directories:
 
 ```yaml
-user:
-  - /path/to/your/ObsidianConventions/
+steering:
+  - /path/to/vault/Orchestration/Steering/
 ```
 
-All `*.md` files in that directory are loaded as user extensions when the skill runs.
+The SKILL.md `!`command`` invokes forge-steering's `bin/steer` tool, which `tree`s the directory. Claude reads specific files on demand.
+
+### 2. Inline overrides (User.md)
+
+Create `skills/ObsidianConventions/User.md` (gitignored) with your conventions:
+
+```markdown
+## My Overrides
+
+- Always use ISO 8601 dates in frontmatter
+- Link people with [[FirstName LastName]] format
+```
 
 ## How It Works
 
-**Claude Code** discovers `skills/ObsidianConventions/SKILL.md` via native skill discovery. At session start, Claude reads the skill's frontmatter (~30 tokens). When working with vault files, Claude invokes the skill — the body contains inline conventions and a `!`command`` block that loads user extensions from config.
+**Claude Code** discovers `skills/ObsidianConventions/SKILL.md` via native skill discovery. At session start, Claude reads the skill's frontmatter (~30 tokens). When working with vault files, Claude invokes the skill — the body contains inline conventions and two `!`command`` blocks that inject external steering content and User.md overrides.
 
-**Other providers** use the SessionStart hook, which emits metadata only via `load_context --index-only`. On demand, `load_context` renders the full SKILL.md content including `!`command`` execution.
-
-The SessionStart hook is enabled by default. To disable it (e.g. for Claude Code where skill discovery makes it redundant), set `events: []` in `config.yaml`.
+**Other providers** use the SessionStart hook, which tries forge-load for metadata emission (convention mode reads module.yaml for field mapping), falling back to awk frontmatter extraction.
 
 ### Content Delivery
 
 | Provider | Discovery | Body loading | Mechanism |
 |----------|-----------|-------------|-----------|
 | **Claude Code** | SKILL.md frontmatter (native) | `!`command`` preprocessing | Lazy — skill invoked on demand |
-| **OpenCode** | SessionStart hook (metadata) | `load_context` with `!`command`` | Lazy (~30 tokens at start) |
+| **OpenCode** | SessionStart hook (metadata) | forge-load `load_context` | Lazy (~30 tokens at start) |
 | **Cursor / Copilot** | Baked into static config | Already inline | Eager (all tokens at start) |
 
 ## Configuration
 
-Config follows `.env.example` / `.env` pattern:
-
-- **`defaults.yaml`** — checked into git, ships with module
-- **`config.yaml`** — gitignored, user creates to override (typically adding `user:` paths)
-
-Loader reads `config.yaml` if it exists, else falls back to `defaults.yaml`.
+**module.yaml** — checked into git, contains metadata field mapping:
 
 ```yaml
-# defaults.yaml
-system:                           # Used by SessionStart hook for metadata extraction
-  - skills/ObsidianConventions/SKILL.md
-
-user: []                          # User extensions loaded by SKILL.md !`command`
-
+name: forge-obsidian
+version: 0.4.0
+description: Obsidian vault conventions. USE WHEN working with Obsidian vault files.
+events:
+  - SessionStart
 metadata:
   name: [name, title]
   description: description
 ```
 
-To add custom vault conventions, create `config.yaml`:
+**config.yaml** — gitignored, user creates to configure:
 
 ```yaml
-user:
-  - /path/to/vault/Conventions/   # directory — all *.md files loaded
+# Disable SessionStart hook (Claude Code doesn't need it)
+events: []
+
+# External vault steering paths
+steering:
+  - /path/to/vault/Orchestration/Steering/
 ```
 
-Entries can be files or directories. Paths resolve module-local first, then project root, then absolute.
+## Dependencies
 
-## Loading Modes
+| Module | Required | Purpose |
+|--------|----------|---------|
+| **forge-load** | Optional | Lazy loading for non-Claude-Code providers |
+| **forge-steering** | Optional | External steering via `bin/steer` tool |
 
-This module works in multiple configurations depending on your setup:
+Both degrade gracefully when absent — awk fallback for session-start, silent no-op for steer.
 
-| Mode | How it loads | When |
-|------|-------------|------|
-| **forge-core** | Dispatcher sets `FORGE_LIB` — shared `Core/lib/load.sh` | Part of full framework |
-| **Claude Code plugin** | `CLAUDE_PLUGIN_ROOT` — local `lib/load.sh` | `claude plugin install` |
-| **Other providers** | SessionStart hook via `load_context` | OpenCode, Cursor, etc. |
+## Testing
 
-The local `lib/load.sh` is an identical copy of the Core version, synced for standalone operation.
+```bash
+bash Modules/forge-obsidian/test.sh
+```

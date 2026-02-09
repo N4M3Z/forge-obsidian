@@ -10,4 +10,6 @@ description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN wor
 - Tags are reserved for system, structural and inline use only.
 - Always verify file paths exist before claiming something is inaccessible.
 
-!`bash "${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}/bin/load-user-content.sh"`
+!`S="${CLAUDE_PLUGIN_ROOT}/Modules/forge-steering/bin/steer"; [ -x "$S" ] && "$S" "${CLAUDE_PLUGIN_ROOT}/Modules/forge-obsidian"`
+
+!`F="${CLAUDE_PLUGIN_ROOT}/Modules/forge-obsidian/skills/ObsidianConventions/User.md"; [ -f "$F" ] && cat "$F"`

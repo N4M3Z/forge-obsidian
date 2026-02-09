@@ -1,8 +1,11 @@
 # macOS
 .DS_Store
 
-# User config override (defaults.yaml is the checked-in default)
+# User config override
 config.yaml
+
+# User inline overrides (created by user, not committed)
+skills/*/User.md
 
 # Claude Code
 .claude/
