@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# forge-promote — push vault workspace skills back to their source modules.
+#
+# Usage:
+#   forge-promote <SkillName>   — promote a single skill
+#   forge-promote               — promote all skills with source_module:
+#
+# After copying to the module, creates a symlink in Orchestration/Upstream/
+# so the skill stays visible in Obsidian (read-only, Linter-excluded).
+#
+# Strips frontmatter keys not in the allowed list (forge-obsidian config).
+
+set -euo pipefail
+
+MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
+FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$MODULE_ROOT/../.." && pwd)}}"
+YAML="$FORGE_ROOT/Core/bin/yaml"
+
+# Auto-resolve FORGE_USER_ROOT if not set
+if [ -z "${FORGE_USER_ROOT:-}" ]; then
+  _user_root=$("$YAML" nested "$FORGE_ROOT/forge.yaml" user root 2>/dev/null)
+  FORGE_USER_ROOT="${_user_root:+$FORGE_ROOT/$_user_root}"
+fi
+: "${FORGE_USER_ROOT:?Could not resolve FORGE_USER_ROOT from forge.yaml}"
+
+SKILLS="$FORGE_USER_ROOT/Orchestration/Skills"
+UPSTREAM="$FORGE_USER_ROOT/Orchestration/Upstream"
+MODULE_BASE="$FORGE_ROOT/Modules"
+
+# Load allowed frontmatter keys from promote config (pipe-delimited for awk)
+_config="$MODULE_ROOT/promote.yaml"
+ALLOWED_KEYS=""
+ALLOWED_KEYS_RAW=""
+if [ -f "$_config" ]; then
+  ALLOWED_KEYS_RAW=$("$YAML" list "$_config" skill_keys 2>/dev/null)
+  # Convert newline-separated to pipe-delimited for awk
+  ALLOWED_KEYS=$(echo "$ALLOWED_KEYS_RAW" | paste -sd'|' -)
+fi
+
+# extract_vault_keys — save non-allowed frontmatter keys to sidecar YAML.
+# Usage: extract_vault_keys <input> <output>
+extract_vault_keys() {
+  local input="$1" output="$2"
+
+  [ -z "$ALLOWED_KEYS" ] && return
+
+  local content
+  content=$(awk -v allowed="$ALLOWED_KEYS" '
+    BEGIN {
+      n = split(allowed, arr, "|")
+      for (i = 1; i <= n; i++) keys[arr[i]] = 1
+      keys["source_module"] = 1
+      keys["module"] = 1
+      in_fm = 0; fm_count = 0; keep_block = 0
+    }
+    /^---$/ {
+      fm_count++
+      if (fm_count >= 2) exit
+      in_fm = 1; next
+    }
+    in_fm {
+      if (match($0, /^[a-zA-Z_-]+:/)) {
+        key = substr($0, 1, RLENGTH - 1)
+        if (key in keys) {
+          keep_block = 0
+        } else {
+          print; keep_block = 1
+        }
+        next
+      }
+      if (/^[[:space:]]/) {
+        if (keep_block) print
+        next
+      }
+      next
+    }
+  ' "$input")
+
+  if [ -n "$content" ]; then
+    echo "$content" > "$output"
+    echo "  Saved vault frontmatter → $(basename "$output")" >&2
+  fi
+}
+
+# strip_frontmatter — rewrite frontmatter keeping only allowed keys + body.
+# Usage: strip_frontmatter <input> <output>
+strip_frontmatter() {
+  local input="$1" output="$2"
+
+  if [ -z "$ALLOWED_KEYS" ]; then
+    # No config — just strip source_module/module
+    sed -e '/^source_module:/d' -e '/^module:/d' "$input" > "$output"
+    return
+  fi
+
+  awk -v allowed="$ALLOWED_KEYS" '
+    BEGIN {
+      n = split(allowed, arr, "|")
+      for (i = 1; i <= n; i++) keys[arr[i]] = 1
+      in_fm = 0; fm_count = 0; skip_block = 0
+    }
+    /^---$/ {
+      fm_count++
+      if (fm_count == 1) { in_fm = 1; print; next }
+      if (fm_count == 2) { in_fm = 0; print; next }
+    }
+    in_fm {
+      # Top-level key: starts at column 0, has colon
+      if (match($0, /^[a-zA-Z_-]+:/)) {
+        key = substr($0, 1, RLENGTH - 1)
+        if (key in keys) {
+          print; skip_block = 0
+        } else {
+          skip_block = 1
+        }
+        next
+      }
+      # Continuation line (indented) — belongs to previous key
+      if (/^[[:space:]]/) {
+        if (!skip_block) print
+        next
+      }
+      # Blank line in frontmatter
+      if (!skip_block) print
+      next
+    }
+    { print }
+  ' "$input" > "$output"
+}
+
+promote_one() {
+  local skill_name="$1"
+  local src="$SKILLS/$skill_name/SKILL.md"
+
+  if [ ! -f "$src" ]; then
+    echo "ERROR: no draft at $src" >&2
+    return 1
+  fi
+
+  # Extract source module from frontmatter (supports both source_module: and module:)
+  local module
+  module=$(awk 'BEGIN{s=0} /^---$/{s++; next} s==1 && /^(source_module|module):/{sub(/^(source_module|module):[[:space:]]*/,"");print}' "$src")
+
+  if [ -z "$module" ]; then
+    echo "ERROR: $skill_name has no source_module: in frontmatter" >&2
+    return 1
+  fi
+
+  local dest_dir="$MODULE_BASE/$module/skills/$skill_name"
+  local dest="$dest_dir/SKILL.md"
+
+  # Copy to module, stripping disallowed keys + saving vault sidecar
+  mkdir -p "$dest_dir"
+  strip_frontmatter "$src" "$dest"
+  extract_vault_keys "$src" "$dest_dir/SKILL.yaml"
+
+  # Report stripped keys
+  local orig_keys stripped
+  orig_keys=$(awk 'BEGIN{s=0} /^---$/{s++; next} s==1 && /^[a-zA-Z_-]+:/{sub(/:.*/, ""); print}' "$src")
+  stripped=""
+  while IFS= read -r k; do
+    [ -z "$k" ] && continue
+    if [ "$k" = "source_module" ] || [ "$k" = "module" ]; then continue; fi
+    if ! echo "$ALLOWED_KEYS_RAW" | grep -qx "$k"; then
+      stripped="${stripped:+$stripped, }$k"
+    fi
+  done <<< "$orig_keys"
+  if [ -n "$stripped" ]; then
+    echo "  Stripped keys: $stripped" >&2
+  fi
+
+  # Remove draft from Skills/
+  command rm "$src"
+  command rmdir "$SKILLS/$skill_name" 2>/dev/null || true
+
+  # Create symlink in Upstream/
+  mkdir -p "$UPSTREAM"
+  [ -L "$UPSTREAM/$skill_name" ] && command rm "$UPSTREAM/$skill_name"
+  ln -s "$dest_dir" "$UPSTREAM/$skill_name"
+
+  echo "Promoted $skill_name → $module (upstream: $UPSTREAM/$skill_name)"
+}
+
+# --- Dispatch ---
+if [ $# -ge 1 ]; then
+  promote_one "$1"
+else
+  # Promote all skills with source_module:
+  count=0
+  while IFS= read -r skill_file; do
+    [ -f "$skill_file" ] || continue
+    has_source=$(awk 'BEGIN{s=0} /^---$/{s++; next} s==1 && /^(source_module|module):/{print "yes"}' "$skill_file")
+    if [ "$has_source" = "yes" ]; then
+      skill_name=$(basename "$(dirname "$skill_file")")
+      promote_one "$skill_name"
+      count=$((count + 1))
+    fi
+  done < <(find "$SKILLS" -name "SKILL.md" -type f 2>/dev/null)
+
+  if [ "$count" -eq 0 ]; then
+    echo "No skills with source_module: found in workspace"
+  else
+    echo "Promoted $count skill(s)"
+  fi
+fi

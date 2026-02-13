@@ -123,10 +123,13 @@ assert_contains "module.yaml has metadata" "metadata:" "$mod_yaml"
   && { printf '  PASS  defaults.yaml deleted\n'; PASS=$((PASS + 1)); } \
   || { printf '  FAIL  defaults.yaml still exists\n'; FAIL=$((FAIL + 1)); }
 
-# No bin/ directory (deleted)
-[ ! -d "$MODULE_ROOT/bin" ] \
-  && { printf '  PASS  bin/ directory deleted\n'; PASS=$((PASS + 1)); } \
-  || { printf '  FAIL  bin/ directory still exists\n'; FAIL=$((FAIL + 1)); }
+# bin/ directory has forge-draft and forge-promote scripts
+[ -x "$MODULE_ROOT/bin/forge-draft" ] \
+  && { printf '  PASS  bin/forge-draft exists and is executable\n'; PASS=$((PASS + 1)); } \
+  || { printf '  FAIL  bin/forge-draft missing or not executable\n'; FAIL=$((FAIL + 1)); }
+[ -x "$MODULE_ROOT/bin/forge-promote" ] \
+  && { printf '  PASS  bin/forge-promote exists and is executable\n'; PASS=$((PASS + 1)); } \
+  || { printf '  FAIL  bin/forge-promote missing or not executable\n'; FAIL=$((FAIL + 1)); }
 
 # No lib/ directory (deleted)
 [ ! -d "$MODULE_ROOT/lib" ] \
@@ -220,14 +223,14 @@ assert_contains "User.md cat: content emitted" "Custom rule" "$result"
 # ============================================================
 printf '\n--- Config override ---\n'
 
-if [ -f "$PROJECT_ROOT/Core/bin/dispatch.sh" ]; then
+if [ -x "$PROJECT_ROOT/Core/bin/dispatch" ]; then
   # events: [] disables module
   printf 'events: []\n' > "$MODULE_ROOT/config.yaml"
-  result=$(bash "$PROJECT_ROOT/Core/bin/dispatch.sh" SessionStart < /dev/null 2>/dev/null) || true
+  result=$(CLAUDE_PLUGIN_ROOT="$PROJECT_ROOT" "$PROJECT_ROOT/Core/bin/dispatch" SessionStart < /dev/null 2>/dev/null) || true
   assert_not_contains "config events: [] disables module" "ObsidianConventions" "$result"
   command rm -f "$MODULE_ROOT/config.yaml"
 else
-  printf '  SKIP  dispatch.sh not available\n'
+  printf '  SKIP  dispatch binary not available\n'
 fi
 
 # ============================================================

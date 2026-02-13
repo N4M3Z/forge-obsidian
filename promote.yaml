@@ -1,0 +1,12 @@
+# forge-obsidian defaults
+#
+# skill_keys: frontmatter keys preserved during /Promote.
+# Any key not in this list is stripped before copying to the module.
+# Override in config.yaml to add project-specific keys.
+skill_keys:
+  - name
+  - description
+  - argument-hint
+  - arguments
+  - version
+  - disable-model-invocation

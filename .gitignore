@@ -19,5 +19,9 @@ config.yaml
 # User inline overrides (created by user, not committed)
 skills/*/User.md
 
+# Rust
+target/
+**/*.rs.bk
+
 # Claude Code
 .claude/

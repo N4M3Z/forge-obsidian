@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# forge-draft — copy a module skill to the vault workspace for editing.
+#
+# Usage: forge-draft <SkillName> [module-name]
+#   SkillName   — name: value from SKILL.md frontmatter (case-sensitive)
+#   module-name — optional, e.g. forge-steering (skips search if given)
+
+set -euo pipefail
+
+SKILL_NAME="${1:?Usage: forge-draft <SkillName> [module-name]}"
+MODULE_HINT="${2:-}"
+
+FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$(dirname "$0")/../.." && pwd)}}"
+YAML="$FORGE_ROOT/Core/bin/yaml"
+
+# Auto-resolve FORGE_USER_ROOT if not set
+if [ -z "${FORGE_USER_ROOT:-}" ]; then
+  _user_root=$("$YAML" nested "$FORGE_ROOT/forge.yaml" user root 2>/dev/null)
+  FORGE_USER_ROOT="${_user_root:+$FORGE_ROOT/$_user_root}"
+fi
+: "${FORGE_USER_ROOT:?Could not resolve FORGE_USER_ROOT from forge.yaml}"
+
+SKILLS="$FORGE_USER_ROOT/Orchestration/Skills"
+UPSTREAM="$FORGE_USER_ROOT/Orchestration/Upstream"
+MODULE_BASE="$FORGE_ROOT/Modules"
+
+# --- Find the source skill ---
+SOURCE=""
+
+if [ -n "$MODULE_HINT" ]; then
+  candidate="$MODULE_BASE/$MODULE_HINT/skills/$SKILL_NAME/SKILL.md"
+  if [ -f "$candidate" ]; then
+    SOURCE="$candidate"
+  else
+    echo "ERROR: skill $SKILL_NAME not found in $MODULE_HINT" >&2
+    exit 1
+  fi
+else
+  while IFS= read -r f; do
+    # Match by name: frontmatter
+    name=$(awk '/^---$/ && !s{s=1;next} /^---$/{exit} /^name:/{sub(/^name:[[:space:]]*/,"");print}' "$f")
+    if [ "$name" = "$SKILL_NAME" ]; then
+      SOURCE="$f"
+      break
+    fi
+  done < <(find "$MODULE_BASE" -path "*/skills/*/SKILL.md" -type f 2>/dev/null)
+fi
+
+if [ -z "$SOURCE" ]; then
+  echo "ERROR: skill '$SKILL_NAME' not found in any module" >&2
+  exit 1
+fi
+
+# Extract module name from path: .../Modules/<module>/skills/...
+MODULE_NAME=$(echo "$SOURCE" | sed "s|$MODULE_BASE/||" | cut -d/ -f1)
+
+# --- Check workspace ---
+DEST_DIR="$SKILLS/$SKILL_NAME"
+DEST="$DEST_DIR/SKILL.md"
+
+# Remove upstream symlink if it exists (we're replacing with a real copy)
+if [ -L "$UPSTREAM/$SKILL_NAME" ]; then
+  command rm "$UPSTREAM/$SKILL_NAME"
+fi
+
+if [ -f "$DEST" ]; then
+  echo "WARNING: draft already exists at $DEST" >&2
+  exit 1
+fi
+
+# --- Copy and add provenance ---
+mkdir -p "$DEST_DIR"
+command cp "$SOURCE" "$DEST"
+
+# Insert module: after the name: line in frontmatter
+awk -v mod="$MODULE_NAME" '
+  /^name:/ && !done { print; print "module: " mod; done=1; next }
+  { print }
+' "$DEST" > "$DEST.tmp" && command mv "$DEST.tmp" "$DEST"
+
+# Restore vault frontmatter from sidecar if it exists
+SIDECAR="$(dirname "$SOURCE")/SKILL.yaml"
+if [ -f "$SIDECAR" ]; then
+  # Insert sidecar keys before the closing --- of frontmatter
+  closing_line=$(awk '/^---$/{c++; if(c==2){print NR; exit}}' "$DEST")
+  if [ -n "$closing_line" ]; then
+    head -n $((closing_line - 1)) "$DEST" > "$DEST.tmp"
+    cat "$SIDECAR" >> "$DEST.tmp"
+    tail -n +"$closing_line" "$DEST" >> "$DEST.tmp"
+    command mv "$DEST.tmp" "$DEST"
+    echo "  Restored vault frontmatter from SKILL.yaml" >&2
+  fi
+fi
+
+echo "Drafted $SKILL_NAME from $MODULE_NAME to $DEST"

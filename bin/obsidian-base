@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source "$(dirname "$0")/_build.sh"
+ensure_built obsidian-base || exit 1
+exec "$BIN_DIR/obsidian-base" "$@"
