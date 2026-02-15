@@ -44,9 +44,12 @@ Modules/forge-obsidian/bin/forge-promote
 
 The script:
 1. Reads `source_module:` from frontmatter to find the target module
-2. Copies to module, stripping `source_module:` line
-3. Removes the draft from `Orchestration/Skills/`
-4. Creates a symlink in `Orchestration/Upstream/<SkillName>/` → module skill directory
+2. Extracts vault-specific frontmatter keys into `SKILL.yaml` sidecar (via `promote.yaml` allowlist)
+3. Copies cleaned SKILL.md to module (Claude Code frontmatter only)
+4. Removes the draft from `Orchestration/Skills/`
+5. Creates a symlink in `Orchestration/Upstream/<SkillName>/` → module skill directory
+
+**Canon + sidecar output is mandatory.** After promote, the module directory must contain both `SKILL.md` (Claude-canonical) and `SKILL.yaml` (Obsidian metadata). A promote without a sidecar is incomplete — the round-trip via `/Draft` would lose vault metadata.
 
 ### Step 4: Post-script
 

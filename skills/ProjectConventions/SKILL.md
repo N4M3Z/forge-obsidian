@@ -1,16 +1,16 @@
 ---
-name: ProjectTemplate
-description: Obsidian project template conventions — base files, embeds, Dataview, frontmatter fields. USE WHEN creating project notes, checking project template compliance, or working with Project.base views.
+name: ProjectConventions
+description: Obsidian project note conventions — base files, embeds, Dataview, frontmatter fields, folder notes. USE WHEN creating project notes, checking project compliance, or working with Project.base views.
 ---
 
-# ProjectTemplate
+# ProjectConventions
 
-Obsidian project template conventions — base files, embeds, Dataview integration, and frontmatter field definitions.
+Obsidian project note conventions — base files, embeds, Dataview integration, and frontmatter field definitions.
 
 ## Template Location
 
-`Orchestration/Templates/Project.md` — the canonical project template.
-`Orchestration/Templates/Project.base` — Obsidian Base file for project views.
+`Templates/PARA/Project.md` — the canonical project template (static).
+`Templates/PARA/Project.js.md` — the Templater version.
 
 ## Required Structure
 
