@@ -12,7 +12,7 @@ Pull a skill from a module into the vault workspace for editing in Obsidian.
 
 **Binary:** `Modules/forge-obsidian/bin/forge-draft`
 
-Auto-resolves `FORGE_USER_ROOT` from `forge.yaml`. Copies the skill to `Orchestration/Skills/`, adds `source_module:` provenance to frontmatter. If an upstream symlink exists (from a previous promote), removes it first.
+Auto-resolves `FORGE_USER_ROOT` from `defaults.yaml`/`config.yaml`. Copies the skill to `Orchestration/Skills/`, adds `source_module:` provenance to frontmatter. If an upstream symlink exists (from a previous promote), removes it first.
 
 ## Usage
 

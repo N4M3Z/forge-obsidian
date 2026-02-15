@@ -16,12 +16,14 @@ MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
 FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$MODULE_ROOT/../.." && pwd)}}"
 YAML="$FORGE_ROOT/Core/bin/yaml"
 
-# Auto-resolve FORGE_USER_ROOT if not set
+# Auto-resolve FORGE_USER_ROOT if not set (config.yaml overrides defaults.yaml)
 if [ -z "${FORGE_USER_ROOT:-}" ]; then
-  _user_root=$("$YAML" nested "$FORGE_ROOT/forge.yaml" user root 2>/dev/null)
+  _cfg="$FORGE_ROOT/defaults.yaml"
+  [ -f "$FORGE_ROOT/config.yaml" ] && _cfg="$FORGE_ROOT/config.yaml"
+  _user_root=$("$YAML" nested "$_cfg" user root 2>/dev/null)
   FORGE_USER_ROOT="${_user_root:+$FORGE_ROOT/$_user_root}"
 fi
-: "${FORGE_USER_ROOT:?Could not resolve FORGE_USER_ROOT from forge.yaml}"
+: "${FORGE_USER_ROOT:?Could not resolve FORGE_USER_ROOT from defaults.yaml/config.yaml}"
 
 SKILLS="$FORGE_USER_ROOT/Orchestration/Skills"
 UPSTREAM="$FORGE_USER_ROOT/Orchestration/Upstream"

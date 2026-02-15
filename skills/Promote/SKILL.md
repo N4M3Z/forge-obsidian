@@ -61,7 +61,7 @@ The script:
 
 **Binary:** `Modules/forge-obsidian/bin/forge-promote`
 
-Auto-resolves `FORGE_USER_ROOT` from `forge.yaml`.
+Auto-resolves `FORGE_USER_ROOT` from `defaults.yaml`/`config.yaml`.
 
 ## Intent-to-Flag Mapping
 
