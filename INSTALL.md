@@ -2,15 +2,39 @@
 
 > **For AI agents**: This guide covers installation of forge-obsidian. Follow the steps for your deployment mode.
 
-## As part of forge-core
+## As part of forge-core (submodule)
 
-Already included as a submodule. No additional setup needed.
+Already included as a submodule. Build with:
+
+```bash
+make install    # builds all modules including forge-obsidian
+```
+
+Or build individually:
+
+```bash
+cargo build --release --manifest-path Modules/forge-obsidian/Cargo.toml
+```
 
 ## Standalone (Claude Code plugin)
 
 ```bash
 claude plugin install forge-obsidian
 ```
+
+## Dependencies
+
+| Dependency | Required | Install | Purpose |
+|-----------|----------|---------|---------|
+| Rust + cargo | Yes | `curl https://sh.rustup.rs -sSf \| sh` | Build `obsidian-base` binary |
+| `jq` | Recommended | `brew install jq` | Filter JSONL output from `obsidian-base` |
+| `yt-dlp` | Recommended | `brew install yt-dlp` | YouTube metadata, subtitles, audio for vault content |
+
+## What gets installed
+
+| Binary | Purpose |
+|--------|---------|
+| `obsidian-base` | Resolve Obsidian Base files (`.base`) to JSONL — filtered, sorted vault queries |
 
 ## User Extensions
 
