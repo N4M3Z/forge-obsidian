@@ -273,6 +273,146 @@ metric.unit:
 4. **Icon convention** — All `icon:` values use Lucide names (`Li*`), not emoji.
 5. **Timezone format** — All date fields use `Z` (offset), not `z` (timezone name).
 
+## Edit Workflow
+
+1. **Identify all tiers** — Check which tiers exist for the template (Core in `Daily Notes/`, Journals `.md`, Templater `.js.md`, Dataview variant `.dv.js.md`).
+2. **Edit the Templater tier first** — It's the most complete version. Make structural changes here.
+3. **Sync to other tiers** — Translate dynamic expressions per the plugin syntax comparison table. Non-dynamic content (sections, embeds, static frontmatter) must be identical.
+4. **Check YAML validity** — Frontmatter keys must be unique. Duplicate keys (e.g., two `collection:` fields) cause `YAMLParseError: Map keys must be unique` at render time.
+5. **Render and verify** — Use the Render Workflow below to create a test note and confirm the output.
+
+## Render Workflow
+
+Templates are rendered by Obsidian, not by Claude. Use the Actions URI plugin to trigger rendering from the CLI.
+
+### Prerequisites
+
+- Actions URI plugin installed and enabled
+- `Hooks/obsidian-uri.sh` helper script available
+- Templater `trigger_on_file_creation: true` enabled (for Templater templates to auto-execute)
+
+### Create a note from a Templater template
+
+```bash
+# Actions URI with Templater rendering
+open "obsidian://actions-uri/note/create?vault=Personal&file=<target-path>&apply=templater&template-file=<template-path>"
+
+# Example: create tomorrow's daily note from the Templater template
+open "obsidian://actions-uri/note/create?vault=Personal&file=Resources/Journals/Daily/2026/02/2026-02-17.md&apply=templater&template-file=Templates/Journals/Daily.js.md"
+```
+
+### Create a note from a Journals/Core template
+
+```bash
+# Actions URI with core Templates rendering
+open "obsidian://actions-uri/note/create?vault=Personal&file=<target-path>&apply=templates&template-file=<template-path>"
+```
+
+### Using the helper script
+
+```bash
+# Simple note creation (content mode, no template)
+Hooks/obsidian-uri.sh create "path/to/note.md" "Initial content"
+
+# Open a note for inspection
+Hooks/obsidian-uri.sh open "path/to/note.md"
+```
+
+### Parameters
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `vault` | `Personal` | Target vault name |
+| `file` | vault-relative path | Target note path |
+| `apply` | `templater` / `templates` / `content` | Rendering engine |
+| `template-file` | vault-relative path | Template to apply |
+| `if-exists` | `skip` / `overwrite` | Handle existing notes |
+| `silent` | `true` | Don't focus the note after creation |
+
+### Test workflow
+
+1. Edit the template file(s)
+2. Run the URI command to create a test note (use a scratch path like `_Test Render.md`)
+3. Open the note in Obsidian and verify rendering
+4. Delete the test note when done
+
+## Dynamic Query Blocks
+
+Templates can embed dynamic queries that display task lists, logs, or aggregations. Two query engines are available:
+
+### Tasks plugin queries
+
+Use `query.file.property()` to read frontmatter values dynamically. Requires the `timeframe` field in frontmatter.
+
+```
+> [!tasks]- Tasks due this day
+> ```tasks
+> not done
+> filter by function task.due && task.due.format("YYYY-MM-DD") <= query.file.property('timeframe')
+> limit 20
+> ```
+```
+
+**For topic/collection pages** — aggregate tasks that reference the current note:
+
+```
+> [!tasks]- Open Tasks
+> ```tasks
+> not done
+> description includes {{query.file.filenameWithoutExtension}}
+> tag does not include #log
+> ```
+```
+
+```
+> [!tasks]- Logs
+> ```tasks
+> description includes {{query.file.filenameWithoutExtension}}
+> tag includes #log
+> ```
+```
+
+**Pros**: No Dataview dependency. Clean syntax.
+**Cons**: Full vault scan per query — slow on large vaults without `limit`. No pagination (only `limit`, no `offset`).
+
+### Dataview queries
+
+Use `dv.view()` with shared view scripts in `Assets/Scripts/Dataview/views/`. Dataview uses an in-memory index — faster for cross-vault aggregation.
+
+```
+> [!tasks]- Tasks due this day
+> ```dataviewjs
+> await dv.view("Scripts/Dataview/views/daily", {flags: 'tasks', container: false});
+> ```
+```
+
+**For topic pages:**
+
+```
+> [!tasks]- Tasks
+> ```dataviewjs
+> await dv.view("Scripts/Dataview/views/logs");
+> await dv.view("Scripts/Dataview/views/tasks");
+> ```
+```
+
+Available views: `daily` (tasks/created/updated/journals), `tasks` (open/closed by topic), `logs` (effort by topic), `repository` (collection listing), plus type-specific views (`area`, `city`, `contact`, `country`, `event`, `project`, `weekly`, `monthly`, `quarterly`, `yearly`).
+
+**Pros**: Indexed — fast on large vaults. Graph-aware (outlinks, backlinks). Complex filtering.
+**Cons**: Dataview plugin dependency. JavaScript view scripts to maintain.
+
+### Choosing between them
+
+| Criterion | Tasks plugin | Dataview |
+|-----------|-------------|----------|
+| Speed on large vaults | Slow (vault scan) | Fast (indexed) |
+| Plugin dependency | Tasks only | Dataview + DataviewJS |
+| Dynamic date from frontmatter | `query.file.property()` | `dv.current().file.day` |
+| Topic aggregation | `description includes` | `outlinks.includes()` + `text.includes()` |
+| Pagination | `limit` only (no offset) | Custom in view scripts |
+
+Use Tasks plugin for simple queries with `limit`. Use Dataview for heavy aggregation (daily notes, topic pages with many references).
+
 ## Config Sync Workflow
 
 Templater config: `.obsidian/plugins/templater-obsidian/data.json`
