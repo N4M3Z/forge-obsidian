@@ -28,9 +28,10 @@ Check TLP before reading:
 
 Use the best available method (try in order):
 
-**Option A — Local REST API** (fastest, if running):
+**Option A — Local REST API** (fastest, if running — see `/ObsidianREST` for full reference):
 ```bash
-curl -s http://localhost:27123/vault/ -H "Authorization: Bearer $(cat ~/.obsidian-rest-api-key 2>/dev/null)" 2>/dev/null
+export $(cat Modules/forge-obsidian/.env 2>/dev/null | xargs 2>/dev/null)
+curl -sk "https://localhost:27124/vault/" -H "Authorization: Bearer $OBSIDIAN_REST_API_KEY" 2>/dev/null
 ```
 
 **Option B — Glob** (always works):

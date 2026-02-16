@@ -16,6 +16,9 @@
 # User config override (gitignored — user creates to configure)
 config.yaml
 
+# Environment variables (API keys)
+.env
+
 # User inline overrides (created by user, not committed)
 skills/*/User.md
 

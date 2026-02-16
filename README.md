@@ -14,6 +14,9 @@ Teaches AI coding assistants how to work with your Obsidian vault — wikilinks,
 |-------|---------|
 | `ObsidianConventions` | Vault file conventions — wikilinks, frontmatter, tags, file verification |
 | `VaultOperations` | TLP integration, patterns, preferences, and operational rules for vault work |
+| `WikiLink` | Add `[[wikilinks]]` to a document by matching terms against vault notes + frontmatter enrichment |
+| `ObsidianREST` | Local REST API reference — list files, search, check existence, read/write via HTTPS |
+| `ObsidianActions` | Actions URI reference — atomic props-set, rename with backlinks, create notes |
 | `Draft` | Pull a module skill into the vault workspace for editing in Obsidian |
 | `Promote` | Push a vault skill back to its target module for GitHub distribution |
 
@@ -102,11 +105,13 @@ Different AI providers load skills differently:
 
 ## Dependencies
 
-| Module | Required | Purpose |
-|--------|----------|---------|
+| Dependency | Required | Purpose |
+|-----------|----------|---------|
 | **forge-load** | Optional | Content loading for non-Claude-Code providers |
+| **Local REST API** plugin | Optional | Vault queries — list files, search, check existence. See `/ObsidianREST` |
+| **Actions URI** plugin | Optional | Atomic writes — props-set, rename with backlinks. See `/ObsidianActions` |
 
-Degrades gracefully when absent.
+All optional dependencies degrade gracefully — skills fall back to file-system operations (Glob, Grep, `safe-write`).
 
 ## Path Resolution
 

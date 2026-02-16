@@ -10,5 +10,4 @@ description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN wor
 - Tags are reserved for system, structural and inline use only.
 - Always verify file paths exist before claiming something is inaccessible.
 
-!`"${CLAUDE_PLUGIN_ROOT}/hooks/skill-load.sh" 2>/dev/null`
-!`"${CLAUDE_PLUGIN_ROOT}/Modules/forge-obsidian/hooks/skill-load.sh" 2>/dev/null`
+!`dispatch skill-load forge-obsidian 2>/dev/null || hooks/skill-load.sh 2>/dev/null`
