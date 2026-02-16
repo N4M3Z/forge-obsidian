@@ -9,5 +9,6 @@ description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN wor
 - Do NOT use tags for topics or categories — use keywords with [[wikilinks]] instead.
 - Tags are reserved for system, structural and inline use only.
 - Always verify file paths exist before claiming something is inaccessible.
+- Frontmatter properties must be flat — Obsidian's Properties panel cannot display nested YAML (arrays of objects, deeply nested keys). Use strings or lists of strings only.
 
-!`dispatch skill-load forge-obsidian 2>/dev/null || hooks/skill-load.sh 2>/dev/null`
+!`dispatch skill-load forge-obsidian`
