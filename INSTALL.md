@@ -29,6 +29,9 @@ claude plugin install forge-obsidian
 | Rust + cargo | Yes | `curl https://sh.rustup.rs -sSf \| sh` | Build `obsidian-base` binary |
 | `jq` | Recommended | `brew install jq` | Filter JSONL output from `obsidian-base` |
 | `yt-dlp` | Recommended | `brew install yt-dlp` | YouTube metadata, subtitles, audio for vault content |
+| [safety-net](https://github.com/kenryu42/claude-code-safety-net) | Recommended | — | Blocks destructive commands — see [root INSTALL.md](../../INSTALL.md#recommended-security-tools) |
+| shellcheck | Recommended | `brew install shellcheck` | Shell script linting |
+| semgrep | Recommended | `brew install semgrep` | OWASP static analysis for Rust |
 
 ## Recommended Obsidian Plugins
 
