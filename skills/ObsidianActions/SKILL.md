@@ -1,10 +1,14 @@
 ---
 name: ObsidianActions
-description: Obsidian Actions URI — atomic frontmatter props-set, rename with backlink updates, create notes, open notes. USE WHEN setting frontmatter properties, renaming notes, creating notes via Obsidian, or avoiding Linter race conditions.
+version: 0.1.0
+description: "[DEPRECATED] Use /ObsidianCLI instead. Obsidian Actions URI — atomic frontmatter props-set, rename with backlink updates, create notes, open notes."
 argument-hint: ""
+disable-model-invocation: true
 ---
 
 # ObsidianActions
+
+> **Deprecated** — The official Obsidian CLI (1.12+) replaces this functionality with `property:set`, `rename`, `create`. See `/ObsidianCLI` for the current reference. This skill remains for users on Obsidian < 1.12.
 
 Reference for the Obsidian Actions URI plugin. Communicates with Obsidian via URL schemes (`obsidian://actions-uri/...`). Fire-and-forget — sends commands, no response to the shell.
 

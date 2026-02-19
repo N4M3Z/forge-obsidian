@@ -10,7 +10,7 @@ set -euo pipefail
 SKILL_NAME="${1:?Usage: forge-draft <SkillName> [module-name]}"
 MODULE_HINT="${2:-}"
 
-FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$(dirname "$0")/../.." && pwd)}}"
+FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(command cd "$(dirname "$0")/../.." && pwd)}}"
 YAML="$FORGE_ROOT/Core/bin/yaml"
 
 # Auto-resolve FORGE_USER_ROOT if not set (config.yaml overrides defaults.yaml)

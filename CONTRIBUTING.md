@@ -3,8 +3,7 @@
 ## Code style
 
 - Pass [shellcheck](https://www.shellcheck.net/) with no warnings
-- Use `command rm`, `command cp`, `command mv` — never bare (macOS aliases add `-i`)
-- Use `builtin cd` — `cd` may be intercepted by shell plugins
+- Use `command cd`, `command rm`, `command cp`, `command mv` — never bare (aliases may intercept)
 - Use `if/then/fi` instead of `&&` chains under `set -e`
 - All shell scripts start with `set -euo pipefail` (exit on error, undefined vars, pipe failures)
 

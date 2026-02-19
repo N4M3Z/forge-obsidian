@@ -26,6 +26,7 @@ claude plugin install forge-obsidian
 
 | Dependency | Required | Install | Purpose |
 |-----------|----------|---------|---------|
+| Obsidian 1.12+ | Recommended | [obsidian.md](https://obsidian.md) | CLI for vault operations (files, properties, search, links, bases) |
 | Rust + cargo | Yes | `curl https://sh.rustup.rs -sSf \| sh` | Build `obsidian-base` binary |
 | `jq` | Recommended | `brew install jq` | Filter JSONL output from `obsidian-base` |
 | `yt-dlp` | Recommended | `brew install yt-dlp` | YouTube metadata, subtitles, audio for vault content |
@@ -33,30 +34,24 @@ claude plugin install forge-obsidian
 | shellcheck | Recommended | `brew install shellcheck` | Shell script linting |
 | semgrep | Recommended | `brew install semgrep` | OWASP static analysis for Rust |
 
-## Recommended Obsidian Plugins
+### Obsidian CLI setup
 
-Two plugins extend AI vault operations. Both are optional — all skills fall back to file-system operations when unavailable. See `/ObsidianREST` and `/ObsidianActions` skills for full API reference.
+The CLI ships inside Obsidian 1.12+. Add to PATH (one-time):
+
+```bash
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+```
+
+Or use the full path directly. Requires a running Obsidian desktop app (communicates via named pipe). Catalyst license ($25) required during Early Access. See `/ObsidianCLI` for the full command reference.
+
+## Legacy Obsidian Plugins (deprecated)
+
+> **Deprecated** — The Obsidian CLI (1.12+) replaces both plugins below. They remain for users on Obsidian < 1.12 or headless/remote environments.
 
 | Plugin | Install | Purpose |
 |--------|---------|---------|
 | [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) | Community plugins → "Local REST API" | Read operations — list files, search content, check note existence via HTTPS |
 | [Actions URI](https://github.com/czottmann/obsidian-actions-uri) | Community plugins → "Actions URI" | Write operations — atomic `props-set`, rename with backlink updates |
-
-### REST API setup
-
-1. Install and enable in Obsidian
-2. Copy the API key from Settings → Local REST API
-3. Create `.env` in the module root (gitignored):
-
-```
-OBSIDIAN_REST_API_KEY=<your-api-key>
-```
-
-HTTPS on port **27124** (insecure HTTP on 27123 is disabled by default).
-
-### Actions URI setup
-
-Install and enable — no API key needed. Vault name defaults to `Personal` (override with `OBSIDIAN_VAULT` env var).
 
 ## What gets installed
 

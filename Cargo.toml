@@ -1,6 +1,6 @@
 [package]
 name = "forge-obsidian"
-version = "0.1.0"
+version = "0.6.0"
 edition = "2021"
 description = "Obsidian vault tools — base resolver, vault conventions"
 license = "EUPL-1.2"

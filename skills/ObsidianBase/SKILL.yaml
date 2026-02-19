@@ -1,19 +1,2 @@
-title: SKILL
-aliases:
-  - ObsidianBases
-tags:
-  - lang/en
-  - type/skill
-keywords:
-  - "[[Artificial Intelligence]]"
-  - "[[Generative Artificial Intelligence]]"
-collection: "[[Skills]]"
-icon: LiCog
-image:
-cssclasses:
-created: 2026-02-13 02:07 UTC
-updated: 2026-02-13 02:24 UTC
-related:
-  - "[[Claude Code]]"
-  - "[[Obsidian Bases]]"
-  - "[[Obsidian]]"
+sources:
+    - https://help.obsidian.md/bases

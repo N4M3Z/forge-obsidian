@@ -9,9 +9,15 @@ This file provides instructional context for the Gemini AI agent when working wi
 ### Core Components
 - **Rust Core (`obsidian-base`):** A Rust-based utility for resolving Obsidian Base files (`.base`) to JSONL and performing vault operations.
 - **Skills:** Markdown-based behavioral rules located in `skills/`.
+    - `ObsidianCLI`: Official Obsidian CLI (1.12+) — files, properties, search, links, bases, daily notes.
     - `ObsidianConventions`: Rules for wikilinks, tags, and frontmatter.
     - `VaultOperations`: Operational rules, TLP integration, and preferences.
+    - `WikiLink`: Add wikilinks to documents by matching terms against vault notes.
+    - `ObsidianBase`: Resolve `.base` files (CLI preferred, binary fallback).
+    - `ObsidianTemplates`: Template management — dual-file creation, rendering, promotion.
+    - `ProjectConventions`: Project note conventions — base files, embeds, Dataview.
     - `Draft` & `Promote`: Workflow for moving skills between modules and the vault workspace.
+    - ~~`ObsidianREST`~~ & ~~`ObsidianActions`~~: Deprecated — replaced by ObsidianCLI.
 - **Hooks:** Integration points for the Forge framework (e.g., `SessionStart`).
 
 ## Building and Running
@@ -45,7 +51,7 @@ This file provides instructional context for the Gemini AI agent when working wi
 - **Draft/Promote Workflow:** Skills can be pulled to the vault for editing (`/Draft`) and pushed back to the module (`/Promote`).
 
 ### Shell Usage
-- **Bypass Aliases:** Use `command` for external programs and `builtin` for shell builtins to ensure compatibility across different environments.
+- **Bypass Aliases:** Always prefix with `command` (e.g., `command cd`, `command cp`, `command rm`) to bypass aliases and shell functions.
 - **Path Resolution:** Use `Core/bin/paths.sh` (from the Forge root) to resolve shared paths like `FORGE_ROOT`, `SAFE_READ_CMD`, etc.
 
 ## Key Files

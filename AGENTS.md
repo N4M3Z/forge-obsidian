@@ -36,7 +36,7 @@ src/
   note/  mod.rs tests.rs  # NoteContext, frontmatter parsing, vault walking
   vault/ mod.rs tests.rs  # vault root discovery (find .obsidian/)
 tests/test.sh             # shell integration tests
-skills/                   # 7 skill definitions (SKILL.md files)
+skills/                   # 11 skill definitions (SKILL.md files)
 hooks/                    # session-start.sh, skill-load.sh, hooks.json
 bin/                      # forge-draft, forge-promote, obsidian-base (shell wrappers)
 ```
@@ -149,8 +149,7 @@ mod tests;
 ## Shell Conventions
 
 All shell scripts use `set -euo pipefail` (test.sh uses `set -uo pipefail`).
-- `command rm/cp/mv` instead of bare (avoids macOS `-i` aliases).
-- `builtin cd` instead of bare `cd` (avoids shell plugin interception).
+- `command cd/cp/mv/rm` instead of bare (aliases may intercept).
 - Pre-commit hook runs `shellcheck -S warning` on staged `.sh` files.
 
 ## Shell Tools

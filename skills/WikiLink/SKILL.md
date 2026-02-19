@@ -1,5 +1,6 @@
 ---
 name: WikiLink
+version: 0.1.0
 description: Add [[wikilinks]] to a markdown document by matching terms against existing vault notes — body links and frontmatter keywords/related enrichment. USE WHEN a document needs wikilinks, terms should link to vault notes, knowledge graph needs enrichment, or enrich keywords.
 argument-hint: "[path to markdown file]"
 ---
@@ -28,20 +29,14 @@ Check TLP before reading:
 
 Use the best available method (try in order):
 
-**Option A — Local REST API** (fastest, if running — see `/ObsidianREST` for full reference):
+**Option A — Obsidian CLI** (fastest, if running — see `/ObsidianCLI` for full reference):
 ```bash
-export $(cat Modules/forge-obsidian/.env 2>/dev/null | xargs 2>/dev/null)
-curl -sk "https://localhost:27124/vault/" -H "Authorization: Bearer $OBSIDIAN_REST_API_KEY" 2>/dev/null
+obsidian files ext=md format=paths
 ```
 
 **Option B — Glob** (always works):
 ```bash
 find "$FORGE_USER_ROOT" -name '*.md' -not -path '*/.obsidian/*' -not -path '*/.trash/*' -not -path '*/.git/*' | sed 's|.*/||; s|\.md$//' | sort -u
-```
-
-**Option C — Actions URI spot-check** (for individual validation):
-```bash
-Hooks/obsidian-uri.sh exists "<note-name>"
 ```
 
 Obsidian resolves wikilinks by filename, not directory path — index by stem only.
@@ -116,7 +111,7 @@ Rules:
 - **Append only** — never remove or overwrite existing entries in either field
 - Format as `- "[[Term]]"` (quoted wikilink in YAML list)
 - Skip terms already present in either field
-- If `Hooks/obsidian-uri.sh` is available, prefer `props-set` for frontmatter updates (avoids Obsidian Linter race conditions)
+- If Obsidian CLI is available, prefer `obsidian property:set` for frontmatter updates (atomic — avoids Obsidian Linter race conditions)
 
 ### Step 7: Review and confirm
 
@@ -139,7 +134,7 @@ Options:
 
 - AMBER: use `safe-write write` via Bash
 - GREEN/CLEAR: use Write tool directly
-- If Actions URI available for frontmatter: use `Hooks/obsidian-uri.sh props-set` instead
+- If Obsidian CLI available for frontmatter: use `obsidian property:set` instead
 
 ## Constraints
 

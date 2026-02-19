@@ -12,8 +12,8 @@
 
 set -euo pipefail
 
-MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
-FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$MODULE_ROOT/../.." && pwd)}}"
+MODULE_ROOT="$(command cd "$(dirname "$0")/.." && pwd)"
+FORGE_ROOT="${FORGE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(command cd "$MODULE_ROOT/../.." && pwd)}}"
 YAML="$FORGE_ROOT/Core/bin/yaml"
 
 # Auto-resolve FORGE_USER_ROOT if not set (config.yaml overrides defaults.yaml)

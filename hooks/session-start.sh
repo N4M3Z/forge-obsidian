@@ -2,8 +2,8 @@
 # SessionStart: emit skill metadata for non-Claude-Code providers.
 set -euo pipefail
 
-MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
-PROJECT_ROOT="${FORGE_ROOT:-$(builtin cd "$MODULE_ROOT/../.." && pwd)}"
+MODULE_ROOT="$(command cd "$(dirname "$0")/.." && pwd)"
+PROJECT_ROOT="${FORGE_ROOT:-$(command cd "$MODULE_ROOT/../.." && pwd)}"
 
 FORGE_LOAD="$PROJECT_ROOT/Modules/forge-load/src"
 if [ -f "$FORGE_LOAD/load.sh" ]; then

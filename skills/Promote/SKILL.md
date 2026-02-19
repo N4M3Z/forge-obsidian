@@ -1,5 +1,6 @@
 ---
 name: Promote
+version: 0.1.0
 description: Push a vault skill to its target module for sharing via GitHub. USE WHEN the user wants to publish a drafted skill, finalize a behavioural rule, or move authored content from the vault workspace to a module.
 argument-hint: "[SkillName or blank for all]"
 ---

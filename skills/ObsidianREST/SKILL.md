@@ -1,10 +1,14 @@
 ---
 name: ObsidianREST
-description: Obsidian Local REST API — list vault files, search content, check note existence, read/write files via HTTPS. USE WHEN listing notes, searching vault, checking if a note exists, querying vault structure, or building note indexes.
+version: 0.1.0
+description: "[DEPRECATED] Use /ObsidianCLI instead. Obsidian Local REST API — list vault files, search content, check note existence, read/write files via HTTPS."
 argument-hint: ""
+disable-model-invocation: true
 ---
 
 # ObsidianREST
+
+> **Deprecated** — The official Obsidian CLI (1.12+) replaces this functionality. See `/ObsidianCLI` for the current reference. This skill remains for users on Obsidian < 1.12 or headless/remote environments where the CLI is unavailable.
 
 Reference for the Obsidian Local REST API plugin. Provides an HTTPS server inside Obsidian for vault queries — list files, search content, check existence, read/write. Returns JSON to `curl`.
 

@@ -52,21 +52,25 @@ src/
 | `hooks/session-start.sh` | Emit skill metadata for non-Claude-Code providers (uses forge-load if available, awk fallback) |
 | `hooks/skill-load.sh` | DCI expansion — inject steering content + User.md overrides into skill context |
 
-All shell scripts use `set -euo pipefail`. Use `command` prefix for `cp`/`mv`/`rm` and `builtin cd` (macOS aliases add `-i`).
+All shell scripts use `set -euo pipefail`. Use `command` prefix for `cd`/`cp`/`mv`/`rm` (aliases may intercept).
 
 ## Skills
 
-Seven skills in `skills/`, each with `SKILL.md` (Claude Code frontmatter + body) and optional `SKILL.yaml` (vault-only frontmatter sidecar):
+Skills in `skills/`, each with `SKILL.md` (Claude Code frontmatter + body) and optional `SKILL.yaml` (vault-only frontmatter sidecar):
 
 | Skill | Trigger |
 |-------|---------|
+| `ObsidianCLI` | Official Obsidian CLI (1.12+) — files, properties, search, links, bases, daily notes |
 | `ObsidianConventions` | Wikilinks, frontmatter, tags — loaded at session start |
 | `VaultOperations` | TLP access, patterns, preferences — vault file work |
-| `ObsidianBase` | Resolve `.base` files — query vault notes |
+| `WikiLink` | Add `[[wikilinks]]` to a document — match terms against vault notes |
+| `ObsidianBase` | Resolve `.base` files — CLI preferred, binary fallback for offline |
 | `ObsidianTemplates` | Template management — dual-file creation, rendering, promotion |
 | `ProjectConventions` | Project note conventions — base files, embeds, Dataview |
 | `Draft` | Pull module skill → vault workspace |
 | `Promote` | Push vault skill → module (with review gate) |
+| ~~`ObsidianREST`~~ | _(deprecated)_ Replaced by ObsidianCLI |
+| ~~`ObsidianActions`~~ | _(deprecated)_ Replaced by ObsidianCLI |
 
 ## Key Conventions
 

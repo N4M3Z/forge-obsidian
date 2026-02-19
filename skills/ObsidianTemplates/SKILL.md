@@ -1,5 +1,6 @@
 ---
 name: ObsidianTemplates
+version: 0.1.0
 description: Obsidian template management — dual-file creation, editing, rendering, promotion from legacy, frontmatter schemas, dynamic query blocks, Templater config updates. USE WHEN creating templates, editing templates, rendering templates, promoting templates, modifying template schemas, updating Templater folder mappings, adding query blocks, or checking template compliance.
 ---
 
@@ -283,56 +284,36 @@ metric.unit:
 
 ## Render Workflow
 
-Templates are rendered by Obsidian, not by Claude. Use the Actions URI plugin to trigger rendering from the CLI.
+Templates are rendered by Obsidian, not by Claude. Use the Obsidian CLI (preferred) or Actions URI plugin to trigger rendering.
 
-### Prerequisites
+### Preferred: Obsidian CLI (1.12+)
 
-- Actions URI plugin installed and enabled
-- `Hooks/obsidian-uri.sh` helper script available
-- Templater `trigger_on_file_creation: true` enabled (for Templater templates to auto-execute)
+```bash
+# Create a note from a template
+obsidian create name="New Note" template=Daily
 
-### Create a note from a Templater template
+# Create with explicit path
+obsidian create name="2026-02-20" template="Journals/Daily.js.md"
+```
+
+Requires Obsidian 1.12+ with Templater `trigger_on_file_creation: true` for Templater templates to auto-execute. See `/ObsidianCLI` for full reference.
+
+### Fallback: Actions URI (Obsidian < 1.12)
+
+> **Deprecated** — Use the CLI above when available.
 
 ```bash
 # Actions URI with Templater rendering
 open "obsidian://actions-uri/note/create?vault=Personal&file=<target-path>&apply=templater&template-file=<template-path>"
 
-# Example: create tomorrow's daily note from the Templater template
-open "obsidian://actions-uri/note/create?vault=Personal&file=Resources/Journals/Daily/2026/02/2026-02-17.md&apply=templater&template-file=Templates/Journals/Daily.js.md"
-```
-
-### Create a note from a Journals/Core template
-
-```bash
 # Actions URI with core Templates rendering
 open "obsidian://actions-uri/note/create?vault=Personal&file=<target-path>&apply=templates&template-file=<template-path>"
 ```
 
-### Using the helper script
-
-```bash
-# Simple note creation (content mode, no template)
-Hooks/obsidian-uri.sh create "path/to/note.md" "Initial content"
-
-# Open a note for inspection
-Hooks/obsidian-uri.sh open "path/to/note.md"
-```
-
-### Parameters
-
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| `vault` | `Personal` | Target vault name |
-| `file` | vault-relative path | Target note path |
-| `apply` | `templater` / `templates` / `content` | Rendering engine |
-| `template-file` | vault-relative path | Template to apply |
-| `if-exists` | `skip` / `overwrite` | Handle existing notes |
-| `silent` | `true` | Don't focus the note after creation |
-
 ### Test workflow
 
 1. Edit the template file(s)
-2. Run the URI command to create a test note (use a scratch path like `_Test Render.md`)
+2. Create a test note (use a scratch path like `_Test Render.md`)
 3. Open the note in Obsidian and verify rendering
 4. Delete the test note when done
 

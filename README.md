@@ -12,13 +12,17 @@ Teaches AI coding assistants how to work with your Obsidian vault — wikilinks,
 
 | Skill | Purpose |
 |-------|---------|
+| `ObsidianCLI` | Official Obsidian CLI (1.12+) — files, properties, search, links, bases, daily notes |
 | `ObsidianConventions` | Vault file conventions — wikilinks, frontmatter, tags, file verification |
 | `VaultOperations` | TLP integration, patterns, preferences, and operational rules for vault work |
 | `WikiLink` | Add `[[wikilinks]]` to a document by matching terms against vault notes + frontmatter enrichment |
-| `ObsidianREST` | Local REST API reference — list files, search, check existence, read/write via HTTPS |
-| `ObsidianActions` | Actions URI reference — atomic props-set, rename with backlinks, create notes |
+| `ObsidianBase` | Resolve `.base` files — query vault notes (CLI preferred, binary fallback) |
+| `ObsidianTemplates` | Template management — dual-file creation, rendering, schemas, Templater config |
+| `ProjectConventions` | Project note conventions — base files, embeds, Dataview, frontmatter |
 | `Draft` | Pull a module skill into the vault workspace for editing in Obsidian |
 | `Promote` | Push a vault skill back to its target module for GitHub distribution |
+| ~~`ObsidianREST`~~ | _(deprecated)_ Local REST API — replaced by ObsidianCLI |
+| ~~`ObsidianActions`~~ | _(deprecated)_ Actions URI — replaced by ObsidianCLI |
 
 ### Draft/Promote workflow
 
@@ -42,8 +46,13 @@ The vault workspace path is configured in `forge-steering/config.yaml` under `st
 forge-obsidian/
 ├── module.yaml
 ├── skills/
+│   ├── ObsidianCLI/SKILL.md
 │   ├── ObsidianConventions/SKILL.md
 │   ├── VaultOperations/SKILL.md
+│   ├── WikiLink/SKILL.md
+│   ├── ObsidianBase/SKILL.md
+│   ├── ObsidianTemplates/SKILL.md
+│   ├── ProjectConventions/SKILL.md
 │   ├── Draft/SKILL.md
 │   └── Promote/SKILL.md
 ├── hooks/
@@ -72,7 +81,7 @@ Once active, Claude Code discovers skills automatically when you work with vault
 
 ```yaml
 name: forge-obsidian
-version: 0.5.0
+version: 0.6.0
 description: Obsidian vault conventions. USE WHEN working with Obsidian vault files.
 events:
   - SessionStart
@@ -107,11 +116,11 @@ Different AI providers load skills differently:
 
 | Dependency | Required | Purpose |
 |-----------|----------|---------|
-| **forge-load** | Optional | Content loading for non-Claude-Code providers |
-| **Local REST API** plugin | Optional | Vault queries — list files, search, check existence. See `/ObsidianREST` |
-| **Actions URI** plugin | Optional | Atomic writes — props-set, rename with backlinks. See `/ObsidianActions` |
+| **Obsidian 1.12+** | Recommended | CLI for vault operations — see `/ObsidianCLI` |
+| ~~Local REST API plugin~~ | Deprecated | Replaced by Obsidian CLI. See `/ObsidianREST` for legacy reference |
+| ~~Actions URI plugin~~ | Deprecated | Replaced by Obsidian CLI. See `/ObsidianActions` for legacy reference |
 
-All optional dependencies degrade gracefully — skills fall back to file-system operations (Glob, Grep, `safe-write`).
+All dependencies degrade gracefully — skills fall back to file-system operations (Glob, Grep, `safe-write`).
 
 ## Path Resolution
 

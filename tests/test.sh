@@ -3,8 +3,8 @@
 # Run: bash Modules/forge-obsidian/tests/test.sh
 set -uo pipefail
 
-MODULE_ROOT="$(builtin cd "$(dirname "$0")/.." && pwd)"
-PROJECT_ROOT="$(builtin cd "$MODULE_ROOT/../.." && pwd)"
+MODULE_ROOT="$(command cd "$(dirname "$0")/.." && pwd)"
+PROJECT_ROOT="$(command cd "$MODULE_ROOT/../.." && pwd)"
 PASS=0 FAIL=0
 
 # --- Helpers ---

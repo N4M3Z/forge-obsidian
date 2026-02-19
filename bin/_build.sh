@@ -2,7 +2,7 @@
 # Shared build-on-demand logic. Source this, don't execute directly.
 # Usage: source "$(dirname "$0")/_build.sh"
 
-PLUGIN_ROOT="${FORGE_MODULE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(builtin cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}}"
+PLUGIN_ROOT="${FORGE_MODULE_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(command cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}}"
 BIN_DIR="$PLUGIN_ROOT/target/release"
 
 ensure_built() {

@@ -1,5 +1,6 @@
 ---
 name: ProjectConventions
+version: 0.1.0
 description: Obsidian project note conventions — base files, embeds, Dataview, frontmatter fields, folder notes. USE WHEN creating project notes, checking project compliance, or working with Project.base views.
 ---
 
