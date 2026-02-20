@@ -1,2 +1,5 @@
+claude:
+    argument-hint: "[SkillName or blank for all]"
+
 sources:
     - https://code.claude.com/docs/en/skills

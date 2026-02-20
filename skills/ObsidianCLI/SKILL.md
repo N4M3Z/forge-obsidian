@@ -2,7 +2,6 @@
 name: ObsidianCLI
 version: 0.1.0
 description: Official Obsidian CLI (1.12+) — list files, search content, manage properties, query bases, navigate links, create/read/rename/delete notes. USE WHEN listing vault files, searching vault, managing frontmatter properties, querying bases, checking backlinks, creating notes via Obsidian, renaming with backlink updates, or any vault operation that benefits from Obsidian's internal index.
-argument-hint: ""
 ---
 
 # ObsidianCLI

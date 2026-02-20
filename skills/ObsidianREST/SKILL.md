@@ -2,8 +2,6 @@
 name: ObsidianREST
 version: 0.1.0
 description: "[DEPRECATED] Use /ObsidianCLI instead. Obsidian Local REST API — list vault files, search content, check note existence, read/write files via HTTPS."
-argument-hint: ""
-disable-model-invocation: true
 ---
 
 # ObsidianREST

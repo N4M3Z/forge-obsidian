@@ -2,8 +2,6 @@
 name: ObsidianActions
 version: 0.1.0
 description: "[DEPRECATED] Use /ObsidianCLI instead. Obsidian Actions URI — atomic frontmatter props-set, rename with backlink updates, create notes, open notes."
-argument-hint: ""
-disable-model-invocation: true
 ---
 
 # ObsidianActions

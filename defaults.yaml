@@ -1,0 +1,31 @@
+skills:
+    claude:
+        Draft:
+        ObsidianActions:
+        ObsidianBase:
+        ObsidianCLI:
+        ObsidianConventions:
+        ObsidianREST:
+        ObsidianTemplates:
+        ProjectConventions:
+        Promote:
+        VaultOperations:
+        WikiLink:
+
+    gemini:
+        ObsidianBase:
+        ObsidianCLI:
+        ObsidianConventions:
+        ObsidianTemplates:
+        ProjectConventions:
+        VaultOperations:
+        WikiLink:
+
+    codex:
+        ObsidianBase:
+        ObsidianCLI:
+        ObsidianConventions:
+        ObsidianTemplates:
+        ProjectConventions:
+        VaultOperations:
+        WikiLink:

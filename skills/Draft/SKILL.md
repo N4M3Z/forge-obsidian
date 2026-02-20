@@ -2,7 +2,6 @@
 name: Draft
 version: 0.1.0
 description: Pull a module skill into the vault for editing in Obsidian. USE WHEN the user wants to edit, iterate on, or author a skill that will eventually live in a module. Creates a working copy in Orchestration/Skills/ with source tracking.
-argument-hint: "[SkillName] [optional: module-name]"
 ---
 
 # Draft

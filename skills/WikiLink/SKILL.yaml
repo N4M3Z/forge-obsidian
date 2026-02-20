@@ -1,2 +1,5 @@
+claude:
+    argument-hint: "[path to markdown file]"
+
 sources:
     - https://help.obsidian.md/links-and-backlinks/internal-links

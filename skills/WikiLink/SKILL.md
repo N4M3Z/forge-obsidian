@@ -2,7 +2,6 @@
 name: WikiLink
 version: 0.1.0
 description: Add [[wikilinks]] to a markdown document by matching terms against existing vault notes — body links and frontmatter keywords/related enrichment. USE WHEN a document needs wikilinks, terms should link to vault notes, knowledge graph needs enrichment, or enrich keywords.
-argument-hint: "[path to markdown file]"
 ---
 
 # WikiLink

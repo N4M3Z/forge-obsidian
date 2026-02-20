@@ -1,2 +1,5 @@
+claude:
+    argument-hint: "[SkillName] [optional: module-name]"
+
 sources:
     - https://code.claude.com/docs/en/skills

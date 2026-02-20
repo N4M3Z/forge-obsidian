@@ -1,2 +1,6 @@
+claude:
+    argument-hint: ""
+    disable-model-invocation: true
+
 sources:
     - https://obsidian.md/plugins?id=actions-uri
