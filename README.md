@@ -19,6 +19,7 @@ Teaches AI coding assistants how to work with your Obsidian vault — wikilinks,
 | `ObsidianBase` | Resolve `.base` files — query vault notes (CLI preferred, binary fallback) |
 | `ObsidianTemplates` | Template management — dual-file creation, rendering, schemas, Templater config |
 | `ProjectConventions` | Project note conventions — base files, embeds, Dataview, frontmatter |
+| `ProjectManagement` | Project lifecycle — create, update, close projects, backlog rules, safe file operations |
 | `Draft` | Pull a module skill into the vault workspace for editing in Obsidian |
 | `Promote` | Push a vault skill back to its target module for GitHub distribution |
 | ~~`ObsidianREST`~~ | _(deprecated)_ Local REST API — replaced by ObsidianCLI |
