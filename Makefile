@@ -1,6 +1,5 @@
 # forge-obsidian — build, test, lint, install, verify
 
-SKILLS   = ObsidianCLI ObsidianConventions ObsidianBase ObsidianTemplates VaultOperations WikiLink ProjectConventions Draft Promote ObsidianREST ObsidianActions
 SKILL_SRC = skills
 LIB_DIR  = $(or $(FORGE_LIB),lib)
 
