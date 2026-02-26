@@ -50,3 +50,18 @@ obsidian base:query path="Resources/Books.base" format=paths
 obsidian daily:path
 obsidian daily:append content="- [#] #log/effort/mid [[Project]] — description"
 ```
+
+## Batch frontmatter migration (eval)
+
+```bash
+obsidian eval code="
+const files = app.vault.getMarkdownFiles().filter(f => f.path.startsWith('Archives/Memory/'));
+for (const file of files) {
+    await app.fileManager.processFrontMatter(file, fm => {
+        fm.tags = ['type/memory/insight'];
+        if (fm.origin) { fm.context = fm.origin; delete fm.origin; }
+    });
+}
+console.log('Migrated: ' + files.length);
+"
+```

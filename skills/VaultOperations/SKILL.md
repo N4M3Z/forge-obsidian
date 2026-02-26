@@ -4,7 +4,7 @@ version: 0.1.0
 description: Vault file operations — TLP access control, wikilinks, tags vs keywords, patterns, and preferences. USE WHEN reading, creating, organizing, or moving vault files.
 ---
 
-## Vault Operations
+# VaultOperations
 
 - Read `Preferences.md` before your first substantive response
 - Read `Vault.md` (vault root) before organizing, moving, or creating vault files

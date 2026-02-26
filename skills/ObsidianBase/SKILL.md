@@ -4,7 +4,7 @@ version: 0.1.0
 description: Resolve Obsidian Base files (.base) to see what the user sees in Obsidian. USE WHEN the user asks about Base views, queries vault notes, wants to see what a .base file shows, or needs filtered/sorted vault data. Wraps the obsidian-base CLI.
 ---
 
-## ObsidianBase
+# ObsidianBase
 
 > **Preferred:** Use `obsidian base:query` via `/ObsidianCLI` when Obsidian is running. This skill documents the standalone `obsidian-base` binary for offline/fallback use.
 

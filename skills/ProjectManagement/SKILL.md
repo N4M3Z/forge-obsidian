@@ -1,5 +1,6 @@
 ---
 name: ProjectManagement
+version: 0.1.0
 description: Project lifecycle management — create, update, close, backlog rules, safe file operations. USE WHEN creating projects, closing projects, moving project files, managing project backlogs, or checking project status.
 ---
 

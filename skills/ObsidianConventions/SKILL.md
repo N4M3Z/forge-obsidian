@@ -4,7 +4,7 @@ version: 0.1.0
 description: Vault conventions for wikilinks, frontmatter and tags. USE WHEN working with Obsidian vault files.
 ---
 
-## Obsidian Conventions
+# ObsidianConventions
 
 - Use [[wikilinks]] liberally — people, projects, organizations, topics, locations. Anything that could be a note.
 - Do NOT use tags for topics or categories — use keywords with [[wikilinks]] instead.

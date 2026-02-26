@@ -10,7 +10,7 @@ Add `[[wikilinks]]` to a markdown document by matching terms against existing no
 
 ## Instructions
 
-### Step 1: Resolve vault root and read the target file
+### Resolve vault root and read the target file
 
 ```bash
 eval "$(bash Core/bin/paths.sh)"
@@ -24,7 +24,7 @@ Check TLP before reading:
 - AMBER: Use `safe-read` via Bash
 - RED: Refuse
 
-### Step 2: Build the note title index
+### Build the note title index
 
 Use the best available method (try in order):
 
@@ -40,7 +40,7 @@ find "$FORGE_USER_ROOT" -name '*.md' -not -path '*/.obsidian/*' -not -path '*/.t
 
 Obsidian resolves wikilinks by filename, not directory path — index by stem only.
 
-### Step 3: Filter the index
+### Filter the index
 
 #### 3a: Exclude RED paths
 
@@ -58,7 +58,7 @@ Also exclude the document's own filename (no self-links).
 
 Longest first. "Forge Framework" matches before "Forge". "Claude Code" before "Claude".
 
-### Step 4: Identify protected zones
+### Identify protected zones
 
 Zones that MUST NOT receive wikilinks:
 
@@ -76,7 +76,7 @@ YAML frontmatter IS processed — but only the `keywords:` and `related:` fields
 
 Track which terms are already linked in the document (including pre-existing wikilinks) to enforce first-occurrence-only linking.
 
-### Step 5: Match and link terms in the body
+### Match and link terms in the body
 
 For each note title in the index (longest first):
 
@@ -96,7 +96,7 @@ A match must be at a word boundary on both sides: start/end of line, space, or p
 
 Multi-word note titles ("Forge Framework", "Claude Code") match as complete phrases. Never split into individual words.
 
-### Step 6: Enrich frontmatter keywords and related
+### Enrich frontmatter keywords and related
 
 Scan the document body for topic-relevant terms that match vault notes. Classify each into:
 
@@ -112,7 +112,7 @@ Rules:
 - Skip terms already present in either field
 - If Obsidian CLI is available, prefer `obsidian property:set` for frontmatter updates (atomic — avoids Obsidian Linter race conditions)
 
-### Step 7: Review and confirm
+### Review and confirm
 
 Present proposed changes:
 
@@ -129,7 +129,7 @@ Options:
 - Review individually
 - Cancel
 
-### Step 8: Write the enriched file
+### Write the enriched file
 
 - AMBER: use `safe-write write` via Bash
 - GREEN/CLEAR: use Write tool directly

@@ -10,7 +10,7 @@ Push a skill from the vault workspace to its target module, with a review gate t
 
 ## Procedure
 
-### Step 1: Run the review agent
+### Run the review agent
 
 Before running the promote script, spawn a `skill-reviewer` agent (via the Task tool) to analyze the draft skill. The agent MUST:
 
@@ -23,7 +23,7 @@ Before running the promote script, spawn a `skill-reviewer` agent (via the Task 
 3. Check skill quality: frontmatter conventions, description triggers, body structure
 4. Return a report with specific suggested edits
 
-### Step 2: Present review to user
+### Present review to user
 
 Show the review findings. For each issue, present the specific edit. The user can:
 - **Accept** — apply the edit
@@ -32,7 +32,7 @@ Show the review findings. For each issue, present the specific edit. The user ca
 
 Apply accepted edits to the draft in `Orchestration/Skills/` before promoting.
 
-### Step 3: Run the promote script
+### Run the promote script
 
 ```bash
 # Promote a single skill
@@ -51,7 +51,7 @@ The script:
 
 **Canon + sidecar output is mandatory.** After promote, the module directory must contain both `SKILL.md` (Claude-canonical) and `SKILL.yaml` (Obsidian metadata). A promote without a sidecar is incomplete — the round-trip via `/Draft` would lose vault metadata.
 
-### Step 4: Post-script
+### Post-script
 
 1. **Commit the module**: Stage the promoted skill in the module's git repo and commit
 2. **Run `/Update`**: Regenerate plugin.json if skill directories changed

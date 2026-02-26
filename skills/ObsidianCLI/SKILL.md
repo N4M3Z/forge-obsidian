@@ -93,6 +93,8 @@ obsidian property:set file="Note" property=status value=active
 
 Atomic update — avoids the Obsidian Linter race condition that affects read-modify-write cycles with `safe-write edit`.
 
+**Scalar values only.** Cannot set arrays (`tags`, `comments`, `sources`) or nested objects. For complex field types, use `eval` with `processFrontMatter` (see Developer section).
+
 ### Remove property
 
 ```bash
@@ -105,6 +107,8 @@ obsidian property:remove file="Note" property=obsolete_key
 obsidian property:read file="Note" property=status
 obsidian property:read file="Note" property=status format=json
 ```
+
+**Stdout contamination.** Like `base:query`, `property:read` can mix extraneous output into stdout. Redirect to temp file for reliable parsing, or use `eval` with `processFrontMatter` for programmatic reads.
 
 ### Rename property key (vault-wide)
 
@@ -188,6 +192,47 @@ obsidian eval code="app.vault.getMarkdownFiles().map(f => f.path).join('\n')"
 
 Has access to `app`, `vault`, `workspace`, `plugins`. Use for operations the CLI doesn't expose natively.
 
+### processFrontMatter (batch frontmatter)
+
+The primary tool for vault-wide frontmatter migrations. Handles arrays, nested values, field deletion, and atomic read-modify-write — everything `property:set` cannot.
+
+**Single file:**
+
+```bash
+obsidian eval code="
+const file = app.vault.getAbstractFileByPath('path/to/Note.md');
+await app.fileManager.processFrontMatter(file, fm => {
+    fm.tags = ['type/memory/insight'];
+    fm.comments = ['Context: what prompted this'];
+    delete fm.oldField;
+});
+"
+```
+
+**Batch (filter + loop):**
+
+```bash
+obsidian eval code="
+const files = app.vault.getMarkdownFiles().filter(f => f.path.startsWith('Archives/Memory/Ideas/'));
+for (const file of files) {
+    await app.fileManager.processFrontMatter(file, fm => {
+        if (fm.spark) { fm.context = fm.spark; delete fm.spark; }
+        if (fm.idea) { fm.description = fm.idea; delete fm.idea; }
+    });
+}
+console.log('Done: ' + files.length + ' files');
+"
+```
+
+**Key rules:**
+
+- Always `await` — `processFrontMatter` is async. Without `await`, changes silently don't persist.
+- Use `for...of`, never `forEach` — `forEach` doesn't await async callbacks.
+- `delete fm.field` removes a key. Setting `fm.field = undefined` leaves a stale key.
+- The `fm` object is the live frontmatter — mutate it directly, don't return anything.
+- Field insertion order is preserved — add fields in the order you want them in YAML.
+- `console.log()` output appears in stdout — use it for progress/verification.
+
 ## Fallback Matrix
 
 | CLI operation | When CLI unavailable |
@@ -196,7 +241,9 @@ Has access to `app`, `vault`, `workspace`, `plugins`. Use for operations the CLI
 | `search` | Grep tool |
 | `read` | `safe-read` or Read tool |
 | `create` / `append` / `prepend` | `safe-write write` or Write tool |
-| `property:set` / `property:remove` | `safe-write edit` (read-modify-write) |
+| `property:set` (scalar) | `safe-write edit` (read-modify-write) |
+| `property:set` (arrays/complex) | `safe-write edit` — `property:set` can't handle arrays either |
+| `property:remove` | `safe-write edit` (read-modify-write) |
 | `move` / `rename` | `command mv` (lossy — no backlink updates) |
 | `backlinks` / `links` | Grep for `[[filename]]` patterns |
 | `orphans` / `unresolved` | No direct equivalent |
@@ -209,7 +256,8 @@ Has access to `app`, `vault`, `workspace`, `plugins`. Use for operations the CLI
 - Requires Obsidian 1.12+ desktop app running (named pipe communication)
 - Catalyst license ($25) required during Early Access period
 - No headless/remote operation — for that use the Local REST API plugin (see `/ObsidianREST`)
-- `base:query` has stdout race condition on heavy queries — use temp file redirect
+- `base:query` and `property:read` have stdout contamination — extraneous output mixes into results. Use temp file redirect for reliable parsing.
+- `property:set` is scalar-only — cannot set arrays, objects, or nested values. Use `eval` + `processFrontMatter` for complex field types.
 - TLP access control (`safe-read` / `safe-write`) is a separate concern — CLI bypasses TLP
 - 1.12.2 renamed `all` parameter to `active` and `silent` to `open` — pin to 1.12.2+ syntax
 
