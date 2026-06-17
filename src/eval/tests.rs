@@ -5,9 +5,15 @@ use std::path::PathBuf;
 
 fn make_note(name: &str, folder: &str, tags: &[&str], links: &[&str]) -> NoteContext {
     let mut properties = HashMap::new();
-    let tag_vals: Vec<serde_yaml::Value> = tags.iter().map(|t| serde_yaml::Value::String(t.to_string())).collect();
+    let tag_vals: Vec<serde_yaml::Value> = tags
+        .iter()
+        .map(|t| serde_yaml::Value::String(t.to_string()))
+        .collect();
     properties.insert("tags".to_owned(), serde_yaml::Value::Sequence(tag_vals));
-    properties.insert("created".to_owned(), serde_yaml::Value::String("2026-01-15".into()));
+    properties.insert(
+        "created".to_owned(),
+        serde_yaml::Value::String("2026-01-15".into()),
+    );
 
     NoteContext {
         path: PathBuf::from(format!("/vault/{folder}/{name}.md")),
@@ -63,10 +69,23 @@ fn tokenize_negation() {
 
 #[test]
 fn eval_contains_file_path() {
-    let note = make_note("Paint", "Resources/Inventory/Painting", &["type/item/painting"], &[]);
+    let note = make_note(
+        "Paint",
+        "Resources/Inventory/Painting",
+        &["type/item/painting"],
+        &[],
+    );
     let this = make_this("Painting", "Resources/Inventory/Painting");
-    assert!(eval_filter(r#"contains(file.path, "Inventory")"#, &note, &this));
-    assert!(!eval_filter(r#"contains(file.path, "Contacts")"#, &note, &this));
+    assert!(eval_filter(
+        r#"contains(file.path, "Inventory")"#,
+        &note,
+        &this
+    ));
+    assert!(!eval_filter(
+        r#"contains(file.path, "Contacts")"#,
+        &note,
+        &this
+    ));
 }
 
 #[test]
@@ -80,37 +99,65 @@ fn eval_contains_file_ext() {
 fn eval_contains_property_tags() {
     let note = make_note("Paint", "Notes", &["type/item/painting"], &[]);
     let this = make_this("Test", "Notes");
-    assert!(eval_filter(r#"contains(property.tags, "type/item/painting")"#, &note, &this));
-    assert!(!eval_filter(r#"contains(property.tags, "type/person")"#, &note, &this));
+    assert!(eval_filter(
+        r#"contains(property.tags, "type/item/painting")"#,
+        &note,
+        &this
+    ));
+    assert!(!eval_filter(
+        r#"contains(property.tags, "type/person")"#,
+        &note,
+        &this
+    ));
 }
 
 #[test]
 fn eval_file_fullname_neq_this() {
     let note = make_note("Note", "Notes", &[], &[]);
     let this = make_this("Base", "Notes");
-    assert!(eval_filter("file.fullname != this.file.fullname", &note, &this));
+    assert!(eval_filter(
+        "file.fullname != this.file.fullname",
+        &note,
+        &this
+    ));
 
     // Same file should fail
     let this_same = make_this("Note", "Notes");
     // rel_path won't match because note is .md and this is .base
-    assert!(eval_filter("file.fullname != this.file.fullname", &note, &this_same));
+    assert!(eval_filter(
+        "file.fullname != this.file.fullname",
+        &note,
+        &this_same
+    ));
 }
 
 #[test]
 fn eval_starts_with() {
     let note = make_note("2026-01-15", "Resources/Journals/Daily/2026/01", &[], &[]);
     let this = make_this("Test", "Notes");
-    assert!(eval_filter(r#"file.path.startsWith("Resources/Journals")"#, &note, &this));
+    assert!(eval_filter(
+        r#"file.path.startsWith("Resources/Journals")"#,
+        &note,
+        &this
+    ));
 }
 
 #[test]
 fn eval_negation() {
     let note = make_note("My Note", "Notes", &[], &[]);
     let this = make_this("Test", "Notes");
-    assert!(eval_filter(r#"!file.name.contains("template")"#, &note, &this));
+    assert!(eval_filter(
+        r#"!file.name.contains("template")"#,
+        &note,
+        &this
+    ));
 
     let template = make_note("template", "Notes", &[], &[]);
-    assert!(!eval_filter(r#"!file.name.contains("template")"#, &template, &this));
+    assert!(!eval_filter(
+        r#"!file.name.contains("template")"#,
+        &template,
+        &this
+    ));
 }
 
 #[test]
@@ -125,7 +172,11 @@ fn eval_has_tag() {
 fn eval_has_tag_multi() {
     let note = make_note("Event", "Notes", &["type/event"], &[]);
     let this = make_this("Test", "Notes");
-    assert!(eval_filter(r#"file.hasTag("type/project", "type/event")"#, &note, &this));
+    assert!(eval_filter(
+        r#"file.hasTag("type/project", "type/event")"#,
+        &note,
+        &this
+    ));
 }
 
 #[test]
@@ -151,7 +202,11 @@ fn eval_method_chain_slice() {
 fn eval_folder_starts_with() {
     let note = make_note("Child", "Projects/MyProject", &[], &[]);
     let this = make_this("MyProject", "Projects/MyProject");
-    assert!(eval_filter(r#"file.folder.startsWith(this.file.folder)"#, &note, &this));
+    assert!(eval_filter(
+        r#"file.folder.startsWith(this.file.folder)"#,
+        &note,
+        &this
+    ));
 }
 
 #[test]

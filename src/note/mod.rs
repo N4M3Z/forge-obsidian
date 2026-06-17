@@ -73,7 +73,9 @@ impl NoteContext {
 
     /// Check if the note has a specific tag (prefix match: "type/project" matches "type/project/foo").
     pub fn has_tag(&self, tag: &str) -> bool {
-        self.tags.iter().any(|t| t == tag || t.starts_with(&format!("{tag}/")))
+        self.tags
+            .iter()
+            .any(|t| t == tag || t.starts_with(&format!("{tag}/")))
     }
 
     /// Check if the note links to a given target (by name, case-insensitive).
@@ -86,7 +88,9 @@ impl NoteContext {
 /// Walk a vault directory and build `NoteContext` for every `.md` file.
 pub fn walk_vault(vault_root: &Path) -> Vec<NoteContext> {
     // Canonicalize to resolve symlinks (macOS /var → /private/var)
-    let vault_root = vault_root.canonicalize().unwrap_or_else(|_| vault_root.to_path_buf());
+    let vault_root = vault_root
+        .canonicalize()
+        .unwrap_or_else(|_| vault_root.to_path_buf());
     let mut notes = Vec::new();
     for entry in WalkDir::new(&vault_root)
         .into_iter()

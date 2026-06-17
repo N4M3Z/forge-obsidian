@@ -12,41 +12,40 @@ Add `[[wikilinks]]` to a markdown document by matching terms against existing no
 
 ### Resolve vault root and read the target file
 
-```bash
-eval "$(bash Core/bin/paths.sh)"
-echo "VAULT: $FORGE_USER_ROOT"
-```
+The vault root is the session cwd when working inside the vault; otherwise target the vault explicitly with `vault=<name>` on every `obsidian` call.
 
 If an argument was provided, use it as the file path. Otherwise, ask which file to enrich.
 
-Check TLP before reading:
-- GREEN/CLEAR: Read directly
-- AMBER: Use `safe-read` via Bash
-- RED: Refuse
+Check TLP before reading — GREEN/CLEAR: proceed; AMBER: ask first; RED: refuse. Then read through Obsidian:
+
+```bash
+obsidian read path=<exact/path.md>
+```
+
+The Read tool is the fallback only when the CLI is unavailable (app not running).
 
 ### Build the note title index
 
-Use the best available method (try in order):
+Through the CLI (see the ObsidianCLI skill for full reference):
 
-**Option A — Obsidian CLI** (fastest, if running — see `/ObsidianCLI` for full reference):
 ```bash
 obsidian files ext=md format=paths
 ```
 
-**Option B — Glob** (always works):
+Fallback when the CLI is unavailable (run from the vault root):
 ```bash
-find "$FORGE_USER_ROOT" -name '*.md' -not -path '*/.obsidian/*' -not -path '*/.trash/*' -not -path '*/.git/*' | sed 's|.*/||; s|\.md$//' | sort -u
+rg --files --glob '*.md' --glob '!.obsidian/**' --glob '!.trash/**' | sed 's|.*/||; s|\.md$//' | sort -u
 ```
 
 Obsidian resolves wikilinks by filename, not directory path — index by stem only.
 
 ### Filter the index
 
-#### 3a: Exclude RED paths
+**3a: Exclude RED paths**
 
 Read the vault `.tlp` file. Remove stems from RED directories — their existence is protected information.
 
-#### 3b: Remove stopwords
+**3b: Remove stopwords**
 
 Remove common short terms that create noise if linked:
 
@@ -54,7 +53,7 @@ Single-character stems, and words like: Data, Home, Table, View, List, Type, Ite
 
 Also exclude the document's own filename (no self-links).
 
-#### 3c: Sort by length
+**3c: Sort by length**
 
 Longest first. "Forge Framework" matches before "Forge". "Claude Code" before "Claude".
 
@@ -88,11 +87,11 @@ For each note title in the index (longest first):
 4. Mark the term as linked — skip subsequent occurrences
 5. Mark the matched span as protected (prevent shorter terms from matching within it)
 
-#### Word boundaries
+**Word boundaries**
 
 A match must be at a word boundary on both sides: start/end of line, space, or punctuation (except `[`, `]`, `|`). This prevents matching "Forge" inside "ForgeCore" or "rust" inside "frustrated".
 
-#### Multi-word terms
+**Multi-word terms**
 
 Multi-word note titles ("Forge Framework", "Claude Code") match as complete phrases. Never split into individual words.
 
@@ -131,9 +130,11 @@ Options:
 
 ### Write the enriched file
 
-- AMBER: use `safe-write write` via Bash
-- GREEN/CLEAR: use Write tool directly
-- If Obsidian CLI available for frontmatter: use `obsidian property:set` instead
+Write through Obsidian so its index and the Linter stay coherent:
+
+- Frontmatter changes: `obsidian property:set` (scalar) or `obsidian eval` with `processFrontMatter` (arrays)
+- Whole-body rewrite: `obsidian eval` with `app.vault.modify(file, content)` — JSON-encode the new content into the `code` string
+- The Write tool is the fallback only when the CLI is unavailable
 
 ## Constraints
 
@@ -146,4 +147,4 @@ Options:
 - **Prefer `[[Title]]` over `[[Title|text]]`** — only use aliased form when case genuinely differs
 - **keywords vs related** — keywords are abstract topics (Spaces), related are concrete entities. Never mix them.
 - **Append-only frontmatter** — never remove existing `keywords:` or `related:` entries
-- After enriching, suggest `/MarkdownLint` if the document also has formatting issues
+- After enriching, suggest a markdown lint pass (the MarkdownConventions skill) if the document also has formatting issues

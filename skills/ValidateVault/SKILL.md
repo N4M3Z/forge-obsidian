@@ -1,5 +1,6 @@
 ---
 name: ValidateVault
+version: 0.1.0
 description: "Validate vault files against .mdschema files — structural checks on frontmatter, headings, and required sections. USE WHEN validate vault, check vault, vault lint, schema check, validate journals, validate memory."
 ---
 

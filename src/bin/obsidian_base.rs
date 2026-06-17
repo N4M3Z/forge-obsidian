@@ -113,7 +113,11 @@ fn main() -> ExitCode {
             let desc = sort_spec.direction == base::SortDirection::Desc;
             matched.sort_by(|a, b| {
                 let cmp = get_sort_key(a, prop).cmp(&get_sort_key(b, prop));
-                if desc { cmp.reverse() } else { cmp }
+                if desc {
+                    cmp.reverse()
+                } else {
+                    cmp
+                }
             });
         }
 

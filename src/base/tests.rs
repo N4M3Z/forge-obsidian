@@ -59,7 +59,10 @@ views:
     match &view.filters {
         Some(FilterNode::Or(entries)) => {
             assert_eq!(entries.len(), 2);
-            assert!(matches!(&entries[0], FilterEntry::Nested(FilterNode::And(_))));
+            assert!(matches!(
+                &entries[0],
+                FilterEntry::Nested(FilterNode::And(_))
+            ));
         }
         other => panic!("expected Or, got {other:?}"),
     }

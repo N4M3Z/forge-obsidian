@@ -51,14 +51,14 @@ pub enum FilterEntry {
 
 /// Parse a `.base` file from disk.
 pub fn parse_file(path: &Path) -> Result<BaseSpec, String> {
-    let content = fs::read_to_string(path).map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
     parse_str(&content)
 }
 
 /// Parse `.base` YAML from a string.
 pub fn parse_str(content: &str) -> Result<BaseSpec, String> {
-    let value: Value =
-        serde_yaml::from_str(content).map_err(|e| format!("Invalid YAML: {e}"))?;
+    let value: Value = serde_yaml::from_str(content).map_err(|e| format!("Invalid YAML: {e}"))?;
 
     let top_filters = value.get("filters").and_then(parse_filter_node);
 
@@ -84,7 +84,10 @@ fn parse_view(val: &Value) -> Option<ViewSpec> {
     let filters = val.get("filters").and_then(parse_filter_node);
 
     let order = match val.get("order") {
-        Some(Value::Sequence(seq)) => seq.iter().filter_map(|v| v.as_str().map(String::from)).collect(),
+        Some(Value::Sequence(seq)) => seq
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect(),
         _ => Vec::new(),
     };
 
