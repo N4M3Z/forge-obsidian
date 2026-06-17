@@ -109,7 +109,9 @@ fn tokenize(input: &str) -> Vec<Token> {
                     i += 1; // closing quote
                 }
             }
-            c if c.is_ascii_digit() || (c == '-' && i + 1 < chars.len() && chars[i + 1].is_ascii_digit()) => {
+            c if c.is_ascii_digit()
+                || (c == '-' && i + 1 < chars.len() && chars[i + 1].is_ascii_digit()) =>
+            {
                 let start = i;
                 if c == '-' {
                     i += 1;
@@ -123,7 +125,10 @@ fn tokenize(input: &str) -> Vec<Token> {
             c if c.is_alphanumeric() || c == '_' || c == '/' || c == '#' => {
                 let start = i;
                 while i < chars.len()
-                    && (chars[i].is_alphanumeric() || chars[i] == '_' || chars[i] == '/' || chars[i] == '#')
+                    && (chars[i].is_alphanumeric()
+                        || chars[i] == '_'
+                        || chars[i] == '/'
+                        || chars[i] == '#')
                 {
                     i += 1;
                 }
@@ -396,9 +401,7 @@ pub struct ThisContext {
 impl ThisContext {
     /// Create a `ThisContext` from a .base file path relative to vault root.
     pub fn from_base_path(vault_root: &Path, base_path: &Path) -> Self {
-        let rel = base_path
-            .strip_prefix(vault_root)
-            .unwrap_or(base_path);
+        let rel = base_path.strip_prefix(vault_root).unwrap_or(base_path);
         let name = base_path
             .file_stem()
             .unwrap_or_default()
@@ -601,25 +604,23 @@ fn eval_method(
             Val::Bool(s.ends_with(&suffix))
         }
 
-        "contains" => {
-            match recv {
-                Val::List(list) => {
-                    let target = args
-                        .first()
-                        .map(|a| eval_expr(a, note, this_ctx).to_string_val())
-                        .unwrap_or_default();
-                    Val::Bool(list.iter().any(|item| item == &target))
-                }
-                Val::Str(s) => {
-                    let needle = args
-                        .first()
-                        .map(|a| eval_expr(a, note, this_ctx).to_string_val())
-                        .unwrap_or_default();
-                    Val::Bool(s.contains(&needle))
-                }
-                _ => Val::Bool(false),
+        "contains" => match recv {
+            Val::List(list) => {
+                let target = args
+                    .first()
+                    .map(|a| eval_expr(a, note, this_ctx).to_string_val())
+                    .unwrap_or_default();
+                Val::Bool(list.iter().any(|item| item == &target))
             }
-        }
+            Val::Str(s) => {
+                let needle = args
+                    .first()
+                    .map(|a| eval_expr(a, note, this_ctx).to_string_val())
+                    .unwrap_or_default();
+                Val::Bool(s.contains(&needle))
+            }
+            _ => Val::Bool(false),
+        },
 
         "slice" => {
             let s = recv.to_string_val();
@@ -727,6 +728,11 @@ fn yaml_to_val(val: &serde_yaml::Value) -> Val {
             Val::List(items)
         }
         serde_yaml::Value::Null => Val::Null,
-        _ => Val::Str(serde_yaml::to_string(val).unwrap_or_default().trim().to_owned()),
+        _ => Val::Str(
+            serde_yaml::to_string(val)
+                .unwrap_or_default()
+                .trim()
+                .to_owned(),
+        ),
     }
 }
